@@ -29,7 +29,9 @@ setup(
     license='GPLv3',
     packages=[
         'eoglib',
+        'eoglib.identification',
         'eoglib.io',
+        'eoglib.models',
     ],
     install_requires=requirements(),
     zip_safe=False

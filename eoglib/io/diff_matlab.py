@@ -1,7 +1,10 @@
+from datetime import datetime
+from os.path import getctime
+
 from numpy import mean
 from scipy.io import loadmat
 
-from eoglib.models import Record, Test, Channel, SaccadicStimulus
+from eoglib.models import Record, Subject, Test, Channel, SaccadicStimulus
 from eoglib.models import SubjectStatus
 from eoglib.models import ChannelCategory, ChannelSource, ChannelOrientation
 
@@ -34,7 +37,7 @@ class DiffMatlabFormat:
                     angle=data['nmFichero1'][0]
                 ),
                 parameters={
-                    'velocity_threshold': data['vS'][0][record].flatten()
+                    'velocity_threshold': data['vThr'][0][0]
                 }
             )
 
@@ -78,8 +81,14 @@ class DiffMatlabFormat:
 
         record = Record(
             filename=data['nmFichero1'][0],
-            status=_STATUS_TRANSLATION.get(data['Cat'][0], SubjectStatus.Unknown),
+            recorded_at=datetime.fromtimestamp(getctime(path)),
+            subject=Subject(
+                status=_STATUS_TRANSLATION.get(data['Cat'][0], SubjectStatus.Unknown),
+            ),
             tests=tests,
+            calibration={
+                ChannelOrientation.Horizontal: 1.0
+            },
             parameters={
                 'saccades_count': int(data['cnSc'][0][0]),
                 'noise': float(path.split('_')[-2]) if noise is None else noise,

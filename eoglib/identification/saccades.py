@@ -33,6 +33,35 @@ def _mask_identification(mask: array) -> Iterable[Saccade]:
         )
 
 
+def _join_by_threshold(
+    events: Iterable['Events'], 
+    threshold: int
+) -> Iterable[Saccade]:
+    """Join events if are close enough
+
+    Args:
+        events: Iterable with candidate events
+        threshold: Proximity threshold in samples
+    Yields:
+        Event objects
+    """
+    current = None
+    for event in events:
+        if current is None:
+            current = event
+        elif current.category != event.category:
+            yield current
+            current = event
+        elif (event.onset - current.offset) <= threshold:
+            current.offset = event.offset
+        else:
+            yield current
+            current = event
+
+    if current is not None:
+        yield current
+
+
 def threshold_identification(velocities: array, threshold: float = 30.0, **kwargs) -> Iterable[Saccade]:
     """Traditional velocity threshold saccade identification
 
@@ -72,12 +101,18 @@ def kmeans_identification(velocities: array, **kwargs) -> Iterable[Saccade]:
     yield from _mask_identification(mask)
 
 
-def identify_by_velocity(velocities: array, method: str='kmeans', **methodArgs) -> Iterable[Saccade]:
+def identify_by_velocity(
+    velocities: array, 
+    method: str='kmeans', 
+    join_threshold: int = None,
+    **methodArgs
+) -> Iterable[Saccade]:
     """Identify saccadic impulses using the velocity profile
 
     Args: 
         velocities: Velocities profile of the eye movement
         method: Method used for perform the identification. Options ['threshold', 'kmeans']
+        join_threshold: Samples distance between saccades to be considered as single event
     Yields:
         Saccade objects
     """ 
@@ -86,5 +121,10 @@ def identify_by_velocity(velocities: array, method: str='kmeans', **methodArgs) 
         'threshold': threshold_identification,
     }.get(method, kmeans_identification)
 
-    yield from method_func(velocities, **methodArgs)
+    saccades = method_func(velocities, **methodArgs)
+
+    if join_threshold is not None:
+        saccades = _join_by_threshold(saccades, join_threshold)
+
+    yield from saccades 
 

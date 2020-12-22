@@ -2,11 +2,15 @@ from .channels import Channel, ChannelCategory, ChannelSource, ChannelOrientatio
 from .events import Event, EventCategory, Saccade
 from .records import Record
 from .stimulus import Stimulus, StimulusCategory, SaccadicStimulus
-from .subjects import Subject, SubjectStatus
+from .subjects import Subject, Gender, Status
 from .tests import Test
 
 
 __all__ = [
+    'Subject',
+    'Gender',
+    'Status',
+
     'Channel',
     'ChannelCategory',
     'ChannelSource',
@@ -21,9 +25,6 @@ __all__ = [
     'SaccadicStimulus',
     'Stimulus',
     'StimulusCategory',
-
-    'Subject',
-    'SubjectStatus',
 
     'Test',
 ]

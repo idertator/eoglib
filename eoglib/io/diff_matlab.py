@@ -5,12 +5,12 @@ from numpy import mean
 from scipy.io import loadmat
 
 from eoglib.models import Record, Subject, Test, Channel, SaccadicStimulus
-from eoglib.models import SubjectStatus
+from eoglib.models import Status as SubjectStatus
 from eoglib.models import ChannelCategory, ChannelSource, ChannelOrientation
 
 
 _STATUS_TRANSLATION = {
-    'S': SubjectStatus.Healthy,
+    'S': SubjectStatus.Control,
     'E': SubjectStatus.Sick,
 }
 

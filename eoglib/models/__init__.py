@@ -7,6 +7,7 @@ from .stimulus import Position as StimulusPosition
 from .stimulus import Orientation as StimulusOrientation
 from .subjects import Subject, Gender, Status
 from .tests import Test
+from .protocols import Protocol
 
 
 __all__ = [

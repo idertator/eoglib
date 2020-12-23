@@ -3,7 +3,7 @@ from math import floor, ceil
 from random import randint
 from typing import Union
 
-from numpy import array, int8, zeros, ones, hstack
+from numpy import ndarray, int8, zeros, ones, hstack
 
 from .base import Model
 
@@ -38,7 +38,7 @@ class Stimulus(Model):
     ):
         super(Stimulus, self).__init__(**parameters)
 
-        assert(calibration, str)
+        assert isinstance(calibration, bool)
         self._calibration = calibration
 
     @property
@@ -47,7 +47,7 @@ class Stimulus(Model):
 
     @calibration.setter
     def calibration(self,  value: bool):
-        assert(value, bool)
+        assert isinstance(value, bool)
         self._calibration = value
 
     @classmethod
@@ -64,7 +64,7 @@ class Stimulus(Model):
         }
 
 
-class SaccadicStimulus(SaccadicStimulus):
+class SaccadicStimulus(Stimulus):
     category = Category.Saccadic
 
     def __init__(
@@ -75,29 +75,28 @@ class SaccadicStimulus(SaccadicStimulus):
         fixation_variability: float,
         saccades_count: int,
         orientation: Union[int, Orientation],
-        channel: array = None,
+        channel: ndarray = None,
         **parameters
     ):
         super(SaccadicStimulus, self).__init__(calibration)
 
-        assert(angle, int)
+        assert isinstance(angle, int)
         self._angle = angle
 
-        assert(fixation_duration, float)
+        assert isinstance(fixation_duration, float)
         self._fixation_duration = fixation_duration
 
-        assert(fixation_variability, float)
+        assert isinstance(fixation_variability, float)
         self._fixation_variability = fixation_variability
 
-        assert(saccades_count, int)
+        assert isinstance(saccades_count, int)
         self._saccades_count = saccades_count
 
         if isinstance(orientation, int):
             orientation = Orientation(orientation)
-        assert(orientation, Orientation)
+        assert isinstance(orientation, Orientation)
         self._orientation = orientation
 
-        assert(channel, array)
         self._channel = channel
 
     def __len__(self):
@@ -126,7 +125,7 @@ class SaccadicStimulus(SaccadicStimulus):
 
     @angle.setter
     def angle(self, value: int):
-        assert(value, int)
+        assert isinstance(value, int)
         self._angle = value
 
     @property
@@ -135,7 +134,7 @@ class SaccadicStimulus(SaccadicStimulus):
 
     @fixation_duration.setter
     def fixation_duration(self, value: float):
-        assert(value, float)
+        assert isinstance(value, float)
         self._fixation_duration = value
 
     @property
@@ -144,7 +143,7 @@ class SaccadicStimulus(SaccadicStimulus):
 
     @fixation_variability.setter
     def fixation_variability(self, value: float):
-        assert(value, float)
+        assert isinstance(value, float)
         self._fixation_variability = value
 
     @property
@@ -153,14 +152,14 @@ class SaccadicStimulus(SaccadicStimulus):
 
     @saccades_count.setter
     def saccades_count(self, value: int):
-        assert(value, int)
+        assert isinstance(value, int)
         self._saccades_count = value
 
     @property
     def orientation(self) -> Orientation:
         return self._orientation
 
-    def generate_channel(self, sampling_rate: float) -> array:
+    def generate_channel(self, sampling_rate: float) -> ndarray:
         if self._channel is None:
             samples = floor(self.fixation_duration * sampling_rate)
             delta = floor(((self.fixation_variability / 100.0) * samples) / 2)
@@ -184,7 +183,7 @@ class SaccadicStimulus(SaccadicStimulus):
 
 
     @property
-    def channel(self) -> array:
+    def channel(self) -> ndarray:
         return self._channel
 
     def position(self, sample: int) -> Position:

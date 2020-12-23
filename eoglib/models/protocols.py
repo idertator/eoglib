@@ -1,4 +1,5 @@
 from datetime import datetime
+from math import radians, tan
 
 from .base import Model
 from .stimulus import Stimulus
@@ -9,14 +10,25 @@ class Protocol(Model):
     def __init__(
         self,
         stimuli: list[Stimulus],
+        name: str = 'Default',
         version: str = '1.0',
         created_at: datetime = datetime.now(),
         **parameters
     ):
         super(Protocol, self).__init__(**parameters)
 
+        assert isinstance(stimuli, list)
+        for stimulus in stimuli:
+            assert isinstance(stimulus, Stimulus)
         self._stimuli = stimuli
+
+        assert isinstance(name, str)
+        self._name = name
+
+        assert isinstance(version, str)
         self._version = version
+
+        assert isinstance(created_at, datetime)
         self._created_at = created_at
 
     def __len__(self):
@@ -24,6 +36,21 @@ class Protocol(Model):
 
     def __getitem__(self, index: int) -> Stimulus:
         return self._stimuli[index]
+
+    def insert(self, index: int, stimulus: Stimulus):
+        self._stimuli.insert(index, stimulus)
+
+    def remove(self, index: int):
+        del self._stimuli[index]
+
+    @property
+    def name(self) -> str:
+        return self._name
+
+    @name.setter
+    def name(self, value: str):
+        assert isinstance(value, str)
+        self._name = value
 
     @property
     def version(self) -> str:
@@ -42,6 +69,10 @@ class Protocol(Model):
             )
         )
 
+    def distance_to_subject(self, screen_distance: float) -> float:
+        angle = self.max_angle
+        return (screen_distance / 2.0) / tan(radians(angle / 2.0))
+
     @classmethod
     def from_json(cls, json: dict):
         parameters = json.pop('parameters')
@@ -57,6 +88,7 @@ class Protocol(Model):
 
         return {
             'version': self._version,
+            'name': self._name,
             'created_at': self._created_at,
             'stimuli': self._stimuli,
         } | Model.to_json(self)

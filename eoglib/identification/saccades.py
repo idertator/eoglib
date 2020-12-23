@@ -34,7 +34,7 @@ def _mask_identification(mask: array) -> Iterable[Saccade]:
 
 
 def _join_by_threshold(
-    events: Iterable['Events'], 
+    events: Iterable['Events'],
     threshold: int
 ) -> Iterable[Saccade]:
     """Join events if are close enough
@@ -84,7 +84,7 @@ def kmeans_identification(velocities: array, **kwargs) -> Iterable[Saccade]:
     Contrary to Nyström approach we set the onset and offset points when the velocity cannot decrease no more, so there is no
     need for thresholds.
 
-    Args: 
+    Args:
         velocities: Velocities profile of the eye movement
     Yields:
         Saccade objects
@@ -102,20 +102,20 @@ def kmeans_identification(velocities: array, **kwargs) -> Iterable[Saccade]:
 
 
 def identify_by_velocity(
-    velocities: array, 
-    method: str='kmeans', 
+    velocities: array,
+    method: str='kmeans',
     join_threshold: int = None,
     **methodArgs
 ) -> Iterable[Saccade]:
     """Identify saccadic impulses using the velocity profile
 
-    Args: 
+    Args:
         velocities: Velocities profile of the eye movement
         method: Method used for perform the identification. Options ['threshold', 'kmeans']
         join_threshold: Samples distance between saccades to be considered as single event
     Yields:
         Saccade objects
-    """ 
+    """
     method_func = {
         'kmeans': kmeans_identification,
         'threshold': threshold_identification,
@@ -126,5 +126,5 @@ def identify_by_velocity(
     if join_threshold is not None:
         saccades = _join_by_threshold(saccades, join_threshold)
 
-    yield from saccades 
+    yield from saccades
 

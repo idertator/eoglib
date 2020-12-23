@@ -2,6 +2,8 @@ from datetime import date
 from enum import IntEnum
 from typing import Any, Union
 
+from .base import Model
+
 
 class Gender(IntEnum):
     Unknown = 0
@@ -33,7 +35,7 @@ class Status(IntEnum):
         }[self]
 
 
-class Subject:
+class Subject(Model):
 
     def __init__(
         self,
@@ -43,6 +45,8 @@ class Subject:
         borndate: date = date.today(),
         **parameters
     ):
+        super(Subject, self).__init__(**parameters)
+
         assert isinstance(name, str)
         self._name = name
 
@@ -58,9 +62,6 @@ class Subject:
 
         assert isinstance(borndate, date)
         self._borndate = borndate
-
-        assert isinstance(parameters, dict)
-        self._parameters = parameters
 
     def __getitem__(self, key):
         if isinstance(key, str):
@@ -114,15 +115,6 @@ class Subject:
         self._borndate = date
 
     @property
-    def parameters(self) -> dict:
-        return self._parameters
-
-    @parameters.setter
-    def parameters(self, value: dict):
-        assert isinstance(value, dict)
-        self._parameters = value
-
-    @property
     def age(self) -> int:
         today = date.today()
         if (borndate := self._borndate) is not None:
@@ -152,11 +144,10 @@ class Subject:
         parameters = json.pop('parameters')
         return cls(**json, **parameters)
 
-    def to_json(self):
-        return {
-            'name': self.name,
-            'gender': self.gender,
-            'status': self.status,
-            'borndate': self.borndate,
-            'parameters': self.parameters,
+    def to_json(self) -> dict:
+        return Model.to_json(self) | {
+            'name': self._name,
+            'gender': self._gender,
+            'status': self._status,
+            'borndate': self._borndate,
         }

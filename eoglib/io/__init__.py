@@ -1,10 +1,9 @@
-from .diff_matlab import DiffMatlabFormat
+from .diff_matlab import load_diff
+from .protocols import load_protocol, save_protocol
 
-from eoglib.models import Record
 
-
-def load(path: str) -> Record:
-    if path.lower().endswith('.mat'):
-        return DiffMatlabFormat.load(path)
-    raise AttributeError('File format is not supported')
-
+__all__ = [
+    'load_diff',
+    'load_protocol',
+    'save_protocol',
+]

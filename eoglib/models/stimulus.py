@@ -206,7 +206,7 @@ class SaccadicStimulus(Stimulus):
 
     @classmethod
     def from_json(cls, json: dict):
-        parameters.pop('category')
+        json.pop('category')
         parameters = json.pop('parameters')
         return cls(**json, **parameters)
 

@@ -2,7 +2,7 @@ from datetime import datetime
 from math import radians, tan
 
 from .base import Model
-from .stimulus import Stimulus
+from .stimulus import Stimulus, SaccadicStimulus, Category
 
 
 class Protocol(Model):
@@ -28,6 +28,8 @@ class Protocol(Model):
         assert isinstance(version, str)
         self._version = version
 
+        if isinstance(created_at, str):
+            created_at = datetime.fromisoformat(created_at)
         assert isinstance(created_at, datetime)
         self._created_at = created_at
 
@@ -76,6 +78,11 @@ class Protocol(Model):
     @classmethod
     def from_json(cls, json: dict):
         parameters = json.pop('parameters')
+        stimuli = json.pop('stimuli')
+        json['stimuli'] = []
+        for stimulus in stimuli:
+            if Category(stimulus['category']) == Category.Saccadic:
+                json['stimuli'].append(SaccadicStimulus.from_json(stimulus))
         return cls(**json, **parameters)
 
     def to_json(self, template: bool = False) -> dict:
@@ -90,5 +97,5 @@ class Protocol(Model):
             'version': self._version,
             'name': self._name,
             'created_at': self._created_at,
-            'stimuli': self._stimuli,
+            'stimuli': stimuli,
         } | Model.to_json(self)

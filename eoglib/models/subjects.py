@@ -1,14 +1,31 @@
 from datetime import date
-from enum import IntEnum
+from enum import Enum
 from typing import Any, Union
 
 from .base import Model
 
 
-class Gender(IntEnum):
-    Unknown = 0
-    Male = 1
-    Female = 2
+class IndexedEnum(Enum):
+
+    @classmethod
+    def from_index(cls, index: int):
+        for idx, value in enumerate(type(self)):
+            if index == idx:
+                return value
+        return None
+
+    @property
+    def index(self) -> int:
+        for idx, value in enumerate(type(self)):
+            if value == self:
+                return idx
+        return -1
+
+
+class Gender(IndexedEnum):
+    Unknown = 'unknown'
+    Male = 'male'
+    Female = 'female'
 
     @property
     def label(self) -> str:
@@ -19,11 +36,12 @@ class Gender(IntEnum):
         }[self]
 
 
-class Status(IntEnum):
-    Unknown = 0
-    Control = 1
-    Presymptomatic = 2
-    Sick = 3
+
+class Status(IndexedEnum):
+    Unknown = 'unknown'
+    Control = 'control'
+    Presymptomatic = 'presymptomatic'
+    Sick = 'sick'
 
     @property
     def label(self) -> str:
@@ -40,19 +58,19 @@ class Subject(Model):
     def __init__(
         self,
         name: str = '',
-        gender: Union[int, Gender] = Gender.Unknown,
-        status: Union[int, Status] = Status.Unknown,
+        gender: Union[str, Gender] = Gender.Unknown,
+        status: Union[str, Status] = Status.Unknown,
         borndate: date = date.today()
     ):
         assert isinstance(name, str)
         self._name = name
 
-        if isinstance(gender, int):
+        if isinstance(gender, str):
             gender = Gender(gender)
         assert isinstance(gender, Gender)
         self._gender = gender
 
-        if isinstance(status, int):
+        if isinstance(status, str):
             status = Status(status)
         assert isinstance(status, Status)
         self._status = status
@@ -85,8 +103,8 @@ class Subject(Model):
         return self._gender
 
     @gender.setter
-    def gender(self, value: Union[int, Gender]):
-        if isinstance(value, int):
+    def gender(self, value: Union[str, Gender]):
+        if isinstance(value, str):
             value = Gender(value)
         assert isinstance(value, Gender)
         self._gender = value
@@ -96,8 +114,8 @@ class Subject(Model):
         return self._status
 
     @status.setter
-    def status(self, value: Union[int, Status]):
-        if isinstance(value, int):
+    def status(self, value: Union[str, Status]):
+        if isinstance(value, str):
             value = Status(value)
         assert isinstance(value, Status)
         self._status = value

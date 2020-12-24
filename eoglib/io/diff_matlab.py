@@ -4,21 +4,22 @@ from os.path import getctime
 from numpy import mean
 from scipy.io import loadmat
 
-from eoglib.models import Record, Subject, Test, Channel, SaccadicStimulus
-from eoglib.models import Status as SubjectStatus
-from eoglib.models import ChannelCategory, ChannelSource, ChannelOrientation
+from eoglib.models import Study, Test, Channel, SaccadicStimulus
+from eoglib.models import Subject, Status
+from eoglib.models import Recorder, Board
 
 
 _STATUS_TRANSLATION = {
-    'S': SubjectStatus.Control,
-    'E': SubjectStatus.Sick,
+    'S': Status.Control,
+    'E': Status.Sick,
 }
 
 
-def load_diff(path: str, noise: float = None) -> Record:
+def load_diff(path: str, noise: float = None) -> Study:
     data = loadmat(path)
 
     sampling_interval = data['tSm'][0][0]
+    sample_rate = 1000 // int(sampling_interval)
 
     tests = []
     for record in range(int(data['cnRg'][0][0])):
@@ -33,62 +34,29 @@ def load_diff(path: str, noise: float = None) -> Record:
             stimulus=SaccadicStimulus(
                 angle=data['nmFichero1'][0]
             ),
-            parameters={
-                'velocity_threshold': data['vThr'][0][0]
-            }
-        )
-
-        test[
-            ChannelCategory.Time,
-            ChannelOrientation.Both,
-            ChannelSource.Both
-        ] = Channel(
-            data=data['xS'][0][record].flatten(),
-            step=sampling_interval
-        )
-
-        test[
-            ChannelCategory.Position,
-            ChannelOrientation.Horizontal,
-            ChannelSource.Recorded
-        ] = Channel(
-            data=Y,
-            step=sampling_interval
-        )
-
-        test[
-            ChannelCategory.Position,
-            ChannelOrientation.Horizontal,
-            ChannelSource.Reference
-        ] = Channel(
-            data=Y0,
-            step=sampling_interval
-        )
-
-        test[
-            ChannelCategory.Velocity,
-            ChannelOrientation.Horizontal,
-            ChannelSource.Reference
-        ] = Channel(
-            data=data['vS'][0][record].flatten(),
-            step=sampling_interval
+            channels={
+                Channel.Time: data['xS'][0][record].flatten(),
+                Channel.Horizontal: Y,
+                Channel.PositionReference: Y0,
+                Channel.VelocityReference: data['vS'][0][record].flatten(),
+            },
+            velocity_threshold=data['vThr'][0][0]
         )
 
         tests.append(test)
 
-    record = Record(
-        filename=data['nmFichero1'][0],
+    study = Study(
         recorded_at=datetime.fromtimestamp(getctime(path)),
+        recorder=Recorder(
+            board=Board.Synthetized,
+            sample_rate=sample_rate
+        ),
         subject=Subject(
-            status=_STATUS_TRANSLATION.get(data['Cat'][0], SubjectStatus.Unknown),
+            status=_STATUS_TRANSLATION.get(data['Cat'][0], Status.Unknown),
         ),
         tests=tests,
-        calibration={
-            ChannelOrientation.Horizontal: 1.0
-        },
-        parameters={
-            'saccades_count': int(data['cnSc'][0][0]),
-            'noise': float(path.split('_')[-2]) if noise is None else noise,
-        }
+        saccades_count=int(data['cnSc'][0][0]),
+        noise=float(path.split('_')[-2]) if noise is None else noise
     )
-    return record
+
+    return study

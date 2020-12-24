@@ -1,4 +1,4 @@
-from enum import IntEnum
+from enum import Enum, IntEnum
 from math import floor, ceil
 from random import randint
 from typing import Union
@@ -8,15 +8,15 @@ from numpy import ndarray, int8, zeros, ones, hstack
 from .base import Model
 
 
-class Category(IntEnum):
-    Unknown = 0
-    Saccadic = 1
+class Category(Enum):
+    Unknown = 'unknown'
+    Saccadic = 'saccadic'
 
 
-class Orientation(IntEnum):
-    Unknown = 0
-    Horizontal = 1
-    Vertical = 2
+class Orientation(Enum):
+    Unknown = 'unknown'
+    Horizontal = 'horizontal'
+    Vertical = 'vertical'
 
 
 class Position(IntEnum):
@@ -65,12 +65,12 @@ class SaccadicStimulus(Stimulus):
 
     def __init__(
         self,
-        calibration: bool,
-        angle: int,
-        fixation_duration: float,
-        fixation_variability: float,
-        saccades_count: int,
-        orientation: Union[int, Orientation],
+        calibration: bool = False,
+        angle: int = 0,
+        fixation_duration: float = 0.0,
+        fixation_variability: float = 0.0,
+        saccades_count: int = 0,
+        orientation: Union[int, Orientation] = Orientation.Unknown,
         channel: ndarray = None,
         **parameters
     ):
@@ -88,7 +88,7 @@ class SaccadicStimulus(Stimulus):
         assert isinstance(saccades_count, int)
         self._saccades_count = saccades_count
 
-        if isinstance(orientation, int):
+        if isinstance(orientation, str):
             orientation = Orientation(orientation)
         assert isinstance(orientation, Orientation)
         self._orientation = orientation

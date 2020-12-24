@@ -12,11 +12,8 @@ class Protocol(Model):
         stimuli: list[Stimulus],
         name: str = 'Default',
         version: str = '1.0',
-        created_at: datetime = datetime.now(),
-        **parameters
+        created_at: datetime = datetime.now()
     ):
-        super(Protocol, self).__init__(**parameters)
-
         assert isinstance(stimuli, list)
         for stimulus in stimuli:
             assert isinstance(stimulus, Stimulus)
@@ -77,13 +74,12 @@ class Protocol(Model):
 
     @classmethod
     def from_json(cls, json: dict):
-        parameters = json.pop('parameters')
         stimuli = json.pop('stimuli')
         json['stimuli'] = []
         for stimulus in stimuli:
             if Category(stimulus['category']) == Category.Saccadic:
                 json['stimuli'].append(SaccadicStimulus.from_json(stimulus))
-        return cls(**json, **parameters)
+        return cls(**json)
 
     def to_json(self, template: bool = False) -> dict:
         stimuli = []
@@ -98,4 +94,4 @@ class Protocol(Model):
             'name': self._name,
             'created_at': self._created_at,
             'stimuli': stimuli,
-        } | Model.to_json(self)
+        }

@@ -42,11 +42,8 @@ class Subject(Model):
         name: str = '',
         gender: Union[int, Gender] = Gender.Unknown,
         status: Union[int, Status] = Status.Unknown,
-        borndate: date = date.today(),
-        **parameters
+        borndate: date = date.today()
     ):
-        super(Subject, self).__init__(**parameters)
-
         assert isinstance(name, str)
         self._name = name
 
@@ -112,7 +109,7 @@ class Subject(Model):
     @borndate.setter
     def borndate(self, value: date):
         assert isinstance(value, date)
-        self._borndate = date
+        self._borndate = value
 
     @property
     def age(self) -> int:
@@ -126,26 +123,19 @@ class Subject(Model):
 
     @property
     def code(self) -> str:
-        name = self.name.upper().strip().split(' ')
-        while len(name) > 3:
-            name.remove(name[1])
-
-        initials = ''
-        if len(name) == 1:
-            initials = name[0][0:3]
-        else:
-            for text in name:
-                initials += text[0]
+        initials = ''.join((
+            name[0]
+            for name in self._name.upper().split()
+        ))
 
         return initials + self._borndate.strftime('%d%m%Y')
 
     @classmethod
     def from_json(cls, json: dict):
-        parameters = json.pop('parameters')
-        return cls(**json, **parameters)
+        return cls(**json)
 
     def to_json(self) -> dict:
-        return Model.to_json(self) | {
+        return {
             'name': self._name,
             'gender': self._gender,
             'status': self._status,

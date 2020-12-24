@@ -33,11 +33,8 @@ class Stimulus(Model):
 
     def __init__(
         self,
-        calibration: bool,
-        **parameters
+        calibration: bool
     ):
-        super(Stimulus, self).__init__(**parameters)
-
         assert isinstance(calibration, bool)
         self._calibration = calibration
 
@@ -52,13 +49,12 @@ class Stimulus(Model):
 
     @classmethod
     def from_json(cls, json: dict):
-        parameters.pop('category')
-        parameters = json.pop('parameters')
-        return cls(**json, **parameters)
+        json.pop('category')
+        return cls(**json)
 
     def to_json(self) -> dict:
         cls = type(self)
-        return Model.to_json(self) | {
+        return {
             'category': cls.category,
             'calibration': self._calibration,
         }
@@ -207,8 +203,7 @@ class SaccadicStimulus(Stimulus):
     @classmethod
     def from_json(cls, json: dict):
         json.pop('category')
-        parameters = json.pop('parameters')
-        return cls(**json, **parameters)
+        return cls(**json)
 
     def to_json(self) -> dict:
         return Stimulus.to_json(self) | {

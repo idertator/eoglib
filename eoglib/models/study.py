@@ -19,7 +19,7 @@ class Study(Model):
         calibration: dict[Channel, float] = {},
         protocol_name: str = '',
         tests: list[Test] = [],
-        light_intensity: float = 0.0,
+        light_intensity: int = 0,
         **parameters
     ):
         assert isinstance(version, str)
@@ -50,7 +50,7 @@ class Study(Model):
             assert isinstance(test, Test)
         self._tests = tests
 
-        assert isinstance(light_intensity, float)
+        assert isinstance(light_intensity, int)
         self._light_intensity = light_intensity
 
         self._parameters = parameters
@@ -133,12 +133,12 @@ class Study(Model):
         self._tests = value
 
     @property
-    def light_intensity(self) -> float:
+    def light_intensity(self) -> int:
         return self._light_intensity
 
     @light_intensity.setter
-    def light_intensity(self, value: float):
-        assert isinstance(value, float)
+    def light_intensity(self, value: int):
+        assert isinstance(value, int)
         self._light_intensity = value
 
     @property

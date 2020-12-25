@@ -31,7 +31,7 @@ class Annotation:
         assert onset <= offset
 
     def __str__(self):
-        return f'{self._event.label}({self.onset} → {self.offset})'
+        return f'{self._event.name}({self.onset} → {self.offset})'
 
     @property
     def event(self) -> Event:

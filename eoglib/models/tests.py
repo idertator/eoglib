@@ -8,6 +8,82 @@ from .channels import Channel
 from .stimulus import Stimulus
 
 
+_CHANNEL_SNAKE_DICT = Channel.snake_names_dict()
+
+
+class _ChannelManager:
+
+    def __init__(self, channel: Channel, data: ndarray):
+        self._channel = channel
+        self._data = data
+
+    def __len__(self):
+        return len(self._data)
+
+    def __getitem__(self, key):
+        if isinstance(key, int):
+            return self._data[key]
+
+        if isinstance(key, Annotation):
+            return self._data[key.onset:key.offset]
+
+        if isinstance(key, tuple) and len(key) == 2:
+            if isinstance(key[0], int) and isinstance(key[1], int):
+                return self._data[key[0]:key[1]]
+
+        raise IndexError('Index type not supported')
+
+    def __setitem__(self, key, value):
+        raise AttributeError('This attribute is inmutable')
+
+    @property
+    def channel(self) -> Channel:
+        return self._channel
+
+    @property
+    def array(self) -> ndarray:
+        return self._data
+
+
+class _ChannelsDictionary(dict):
+
+    def __init__(self, channels: dict[Channel, Union[str, ndarray]], *args):
+        dict.__init__(self, *args)
+
+        self._channels = channels
+        self._managers: dict[Channel, _ChannelManager] = {}
+
+    def __getattr__(self, name: str):
+        if name not in _CHANNEL_SNAKE_DICT:
+            raise AttributeError(f'{name} is not a valid attribute')
+        channel = _CHANNEL_SNAKE_DICT[name]
+        if channel not in self._managers and channel in self._channels:
+            data = self._channels[channel]
+            if isinstance(data, ndarray):
+                self._managers[channel] = _ChannelManager(channel, data)
+        return self._managers.get(channel, None)
+
+    def __setattr__(self, name: str, value: ndarray):
+        if name in _CHANNEL_SNAKE_DICT:
+            channel = _CHANNEL_SNAKE_DICT[name]
+            self._channels[channel] = value
+        else:
+            dict.__setattr__(name, value)
+
+    def __getitem__(self, key):
+        if isinstance(key, Channel):
+            return self._channels[key]
+
+        raise IndexError('Index type not supported')
+
+    def __setitem__(self, key, value):
+        if isinstance(key, Channel):
+            assert isinstance(value, (str, ndarray))
+            self._channels[key] = value
+        else:
+            raise IndexError('Index type not supported')
+
+
 class Test(Model):
 
     def __init__(
@@ -26,6 +102,7 @@ class Test(Model):
             assert isinstance(key, Channel)
             assert isinstance(value, (str, ndarray))
         self._channels = channels
+        self._channels_dictionary = _ChannelsDictionary(channels)
 
         assert isinstance(annotations, list)
         for annotation in annotations:
@@ -44,12 +121,14 @@ class Test(Model):
     def __getitem__(self, key):
         if isinstance(key, int):
             return self._annotations[key]
-        elif isinstance(key, str):
+
+        if isinstance(key, str):
             return self._parameters[key]
-        elif isinstance(key, Channel):
-            return self._channels[key]
-        else:
-            raise IndexError('Index type not supported')
+
+        if isinstance(key, Channel):
+            return self._channels_dictionary[key]
+
+        raise IndexError('Index type not supported')
 
     def __setitem__(self, key, value):
         if isinstance(key, int):
@@ -59,7 +138,7 @@ class Test(Model):
             self._parameters = value
         elif isinstance(key, Channel):
             assert isinstance(value, (str, ndarray))
-            self._channels[key] = value
+            self._channels_dictionary[key] = value
         else:
             raise IndexError('Index type not supported')
 
@@ -73,8 +152,8 @@ class Test(Model):
         self._stimulus = value
 
     @property
-    def channels(self) -> dict[Channel, Union[str, ndarray]]:
-        return self._channels
+    def channels(self) -> _ChannelsDictionary:
+        return self._channels_dictionary
 
     @channels.setter
     def channels(self, value: dict[Channel, Union[str, ndarray]]):
@@ -83,6 +162,7 @@ class Test(Model):
             assert isinstance(key, (str, Channel))
             assert isinstance(value, ndarray)
         self._channels = value
+        self._channels_dictionary = _ChannelsDictionary(value)
 
     @property
     def annotations(self) -> list[Annotation]:

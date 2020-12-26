@@ -183,7 +183,7 @@ class SaccadicStimulus(Stimulus):
         return self._channel
 
     def position(self, sample: int) -> Position:
-        if self._channe is not None and sample < len(self._channel):
+        if self._channel is not None and sample < len(self._channel):
             if self._orientation == Orientation.Horizontal:
                 if self._channel[sample] < 0:
                     return Position.Left

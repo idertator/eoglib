@@ -1,4 +1,4 @@
-from numpy import ndarray, array, int32, int32
+from numpy import ndarray, array, int32, mean
 
 
 def load_openbci(filename: str) -> tuple[ndarray, ndarray, ndarray]:
@@ -8,7 +8,7 @@ def load_openbci(filename: str) -> tuple[ndarray, ndarray, ndarray]:
     current_stimulus = 2
 
     horizontal, vertical, stimulus = [], [], []
-    with open(path, 'rt') as f:
+    with open(filename, 'rt') as f:
         for line in f:
             components = line.strip().split(',')
             if len(components) == 12:

@@ -5,7 +5,7 @@ from numpy import ndarray
 from .annotations import Annotation
 from .base import Model
 from .channels import Channel
-from .stimulus import Stimulus
+from .stimulus import Stimulus, SaccadicStimulus, Category as StimulusCategory
 
 
 _CHANNEL_SNAKE_DICT = Channel.snake_names_dict()
@@ -68,7 +68,7 @@ class _ChannelsDictionary(dict):
             channel = _CHANNEL_SNAKE_DICT[name]
             self._channels[channel] = value
         else:
-            dict.__setattr__(name, value)
+            dict.__setattr__(self, name, value)
 
     def __getitem__(self, key):
         if isinstance(key, Channel):
@@ -206,7 +206,11 @@ class Test(Model):
 
     @classmethod
     def from_json(cls, json: dict, study = None):
-        stimulus = Stimulus.from_json(json.pop('stimulus'))
+        stimulus = json.pop('stimulus')
+        stimulus_category = StimulusCategory(stimulus['category'])
+        if stimulus_category == StimulusCategory.Saccadic:
+            stimulus = SaccadicStimulus.from_json(stimulus)
+
         if 'channels' in json:
             channels = {
                 Channel(key): value
@@ -231,7 +235,7 @@ class Test(Model):
 
     def to_json(self, dump_channels: bool=True) -> dict:
         result = {
-            'stimulus': self._stimulus.to_json(),
+            'stimulus': self._stimulus.to_json(False),
             'annotations': [
                 annotation.to_json()
                 for annotation in self._annotations

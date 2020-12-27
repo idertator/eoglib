@@ -205,12 +205,14 @@ class SaccadicStimulus(Stimulus):
         json.pop('category')
         return cls(**json)
 
-    def to_json(self) -> dict:
-        return Stimulus.to_json(self) | {
+    def to_json(self, dump_channels: bool = True) -> dict:
+        result = Stimulus.to_json(self) | {
             'angle': self._angle,
             'fixation_duration': self._fixation_duration,
             'fixation_variability': self._fixation_variability,
             'saccades_count': self._saccades_count,
             'orientation': self._orientation,
-            'channel': self._channel,
         }
+        if dump_channels:
+            result['channel'] = self._channel
+        return result

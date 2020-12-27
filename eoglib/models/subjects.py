@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 from enum import Enum
 from typing import Any, Union
 
@@ -75,6 +75,8 @@ class Subject(Model):
         assert isinstance(status, Status)
         self._status = status
 
+        if isinstance(borndate, str):
+            borndate = datetime.strptime(borndate, '%Y-%m-%d').date()
         assert isinstance(borndate, date)
         self._borndate = borndate
 

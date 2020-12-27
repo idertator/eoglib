@@ -179,6 +179,7 @@ class Study(Model):
             for key, value in json.pop('calibration')
         }
 
+        tests = json.pop('tests')
         parameters = json.pop('parameters')
 
         study = cls(
@@ -191,7 +192,7 @@ class Study(Model):
 
         study.tests = [
             Test.from_json(test, study)
-            for test in json.pop('tests')
+            for test in tests
         ]
 
         return study

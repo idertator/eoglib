@@ -8,20 +8,22 @@ from orjson import dumps, loads, OPT_INDENT_2
 
 def save_eog(filename: str, study: Study):
     with ZipFile(filename, mode='w') as out:
-        study_json = self.study.to_json(False)
-        out.writestr('manifest.json', manifest)
+        study_json = study.to_json()
 
         for index, test in enumerate(study):
             test_path = f'tests/{index:02}'
-            test_channels_json = study_json['tests'][index]['channels'] = {}
-            for channel, data in test.channels:
+            test_channels_json = study_json['tests'][index]['channels']
+            channels = test_channels_json.keys()
+            for channel in channels:
+                data = test_channels_json.pop(channel)
                 full_path = f'{test_path}/{channel.snake_name}.npz'
                 test_channels_json[channel.value] = full_path
                 buff = BytesIO()
                 savez_compressed(buff, data=data)
-                out.writestr(buff.read())
+                out.writestr(full_path, buff.read())
 
         manifest = dumps(study_json, option=OPT_INDENT_2)
+        out.writestr('manifest.json', manifest)
 
 
 def load_eog(filename: str) -> Study:

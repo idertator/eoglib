@@ -171,30 +171,32 @@ class Study(Model):
         return result
 
     @classmethod
-    def from_json(cls, json: dict, study = None):
+    def from_json(cls, json: dict):
         recorder = Recorder.from_json(json.pop('recorder'))
         subject = Subject.from_json(json.pop('subject'))
         calibration = {
             Channel(key): value
             for key, value in json.pop('calibration')
         }
-        tests = [
-            Test.from_json(test)
-            for test in json.pop('tests')
-        ]
 
         parameters = json.pop('parameters')
 
-        return cls(
+        study = cls(
             recorder=recorder,
             subject=subject,
             calibration=calibration,
-            tests=tests,
             **json,
             **parameters
         )
 
-    def to_json(self) -> dict:
+        study.tests = [
+            Test.from_json(test, study)
+            for test in json.pop('tests')
+        ]
+
+        return study
+
+    def to_json(self, dump_channels: bool = True) -> dict:
         return {
             'version': self._version,
             'recorded_at': self._recorded_at,
@@ -203,7 +205,7 @@ class Study(Model):
             'calibration': self._calibration,
             'protocol_name': self._protocol_name,
             'tests': [
-                test.to_json()
+                test.to_json(dump_channels)
                 for test in self._tests
             ],
             'light_intensity': self._light_intensity,

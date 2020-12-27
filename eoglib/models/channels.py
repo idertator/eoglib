@@ -2,6 +2,10 @@ from enum import Enum
 from re import sub
 
 
+def _snake_case(name: str) -> str:
+    return sub(r'(?<!^)(?=[A-Z])', '_', name).lower()
+
+
 class Channel(Enum):
     Unknown = 'unknown'
     Timestamps = 'timestamps'
@@ -14,10 +18,13 @@ class Channel(Enum):
     PositionReference = 'y0'
     VelocityReference = 'v0'
 
+    @property
+    def snake_name(self) -> str:
+        return _snake_case(self.name)
+
     @classmethod
     def snake_names_dict(cls):
-        snake_case = lambda s: sub(r'(?<!^)(?=[A-Z])', '_', s).lower()
         return {
-            snake_case(channel.name): channel
+            _snake_case(channel.name): channel
             for channel in cls
         }

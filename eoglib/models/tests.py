@@ -207,10 +207,13 @@ class Test(Model):
     @classmethod
     def from_json(cls, json: dict, study = None):
         stimulus = Stimulus.from_json(json.pop('stimulus'))
-        channels = {
-            Channel(key): value
-            for key, value in json.pop('channels')
-        }
+        if 'channels' in json:
+            channels = {
+                Channel(key): value
+                for key, value in json.pop('channels')
+            }
+        else:
+            channels = {}
         annotations = [
             Annotation.from_json(annotation)
             for annotation in json.pop('annotations')
@@ -226,13 +229,15 @@ class Test(Model):
             **parameters
         )
 
-    def to_json(self) -> dict:
-        return {
+    def to_json(self, dump_channels: bool=True) -> dict:
+        result = {
             'stimulus': self._stimulus.to_json(),
-            'channels': self._channels,
             'annotations': [
                 annotation.to_json()
                 for annotation in self._annotations
             ],
             'parameters': self._parameters,
         }
+        if dump_channels:
+            result['channels'] = self._channels
+        return result

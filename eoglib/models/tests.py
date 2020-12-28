@@ -214,7 +214,7 @@ class Test(Model):
         if 'channels' in json:
             channels = {
                 Channel(key): value
-                for key, value in json.pop('channels')
+                for key, value in json.pop('channels').items()
             }
         else:
             channels = {}

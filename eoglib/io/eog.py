@@ -20,7 +20,7 @@ def save_eog(filename: str, study: Study):
                 test_channels_json[channel.value] = full_path
                 buff = BytesIO()
                 savez_compressed(buff, data=data)
-                out.writestr(full_path, buff.read())
+                out.writestr(full_path, buff.getvalue())
 
         manifest = dumps(study_json, option=OPT_INDENT_2)
         out.writestr('manifest.json', manifest)

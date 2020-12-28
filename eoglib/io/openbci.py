@@ -14,7 +14,7 @@ def load_openbci(filename: str) -> tuple[ndarray, ndarray, ndarray]:
     center = StimulusPosition.Center.value
 
     with open(filename, 'rt') as f:
-        initialized = True
+        initialized = False
         for line in f:
             components = line.strip().split(',')
             if len(components) == 12:

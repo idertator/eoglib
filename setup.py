@@ -1,5 +1,4 @@
 from setuptools import setup
-from typing import List
 
 
 def readme() -> str:
@@ -7,7 +6,7 @@ def readme() -> str:
         return f.read()
 
 
-def requirements() -> List[str]:
+def requirements() -> list[str]:
     with open('requirements.txt') as f:
         return [
             line.strip()
@@ -17,11 +16,20 @@ def requirements() -> List[str]:
 
 setup(
     name='eoglib',
-    version='0.1',
+    version='0.1.0-alpha',
     description='Eye movement processing library',
     long_description=readme(),
     classifiers=[
-        'Development Status :: 2 - Pre-Alpha'
+        'Development Status :: 3 - Alpha',
+        'Environment :: X11 Applications',
+        'Intended Audience :: Education',
+        'Intended Audience :: Healthcare Industry',
+        'Intended Audience :: Science/Research',
+        'License :: Other/Proprietary License',
+        'Natural Language :: English',
+        'Operating System :: POSIX :: Linux',
+        'Topic :: Scientific/Engineering :: Bio-Informatics',
+        'Topic :: Scientific/Engineering :: Medical Science Apps.',
     ],
     url='http://github.com/idertator/eoglib',
     author='Roberto Antonio Becerra García',

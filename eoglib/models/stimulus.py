@@ -23,9 +23,9 @@ class Position(IntEnum):
     Unknown = 0
     Left = 1
     Right = 2
-    Top = 4
-    Bottom = 8
-    Center = 16
+    Top = 3
+    Bottom = 4
+    Center = 5
 
 
 class Stimulus(Model):

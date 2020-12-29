@@ -35,7 +35,7 @@ def load_eog(filename: str) -> Study:
 
         study = Study.from_json(manifest)
         for test in study:
-            for channel, path in test.channels.items():
+            for channel, path in test._channels.items():
                 with inp.open(path) as channel_file:
                     test[Channel(channel)] = load(channel_file)['data']
 

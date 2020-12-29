@@ -28,9 +28,9 @@ def load_openbci(filename: str) -> tuple[ndarray, ndarray, ndarray]:
                 initialized = True
 
                 stimulus.append({
-                    StimulusPosition.Left.value: 1,
+                    StimulusPosition.Left.value: -1,
                     StimulusPosition.Center.value: 0,
-                    StimulusPosition.Right.value: -1,
+                    StimulusPosition.Right.value: 1,
                 }[current_stimulus])
 
                 horizontal.append(mV(components[1]))

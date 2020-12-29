@@ -2,7 +2,7 @@ from io import BytesIO
 from zipfile import ZipFile
 
 from eoglib.models import Study, Channel
-from numpy import array, int32, mean, savez_compressed, load
+from numpy import savez_compressed, load
 from orjson import dumps, loads, OPT_INDENT_2
 
 

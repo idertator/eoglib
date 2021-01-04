@@ -1,0 +1,17 @@
+from numpy import ndarray
+from scipy.signal import iirnotch, lfilter
+
+
+_NOTCH = {
+    50: {
+        250: iirnotch(50, 30, 250),
+    },
+    60: {
+        250: iirnotch(60, 30, 250),
+    }
+}
+
+
+def notch_filter(data: ndarray, sampling_rate: int, cut_frequency: int) -> ndarray:
+    b, a = _NOTCH[cut_frequency][sampling_rate]
+    return lfilter(b, a, data)

@@ -1,5 +1,6 @@
 from numpy import ndarray, array, float32, int8, mean
 
+from eoglib.filtering import notch_filter
 from eoglib.models import StimulusPosition
 
 _DEFAULT_GAIN = 24
@@ -41,9 +42,11 @@ def load_openbci(filename: str) -> tuple[ndarray, ndarray, ndarray]:
 
     horizontal = array(horizontal, dtype=float32)[1:]
     horizontal -= int(mean(horizontal))
+    horizontal = notch_filter(horizontal, 250, 50)
 
     vertical = array(vertical, dtype=float32)[1:]
     vertical -= int(mean(vertical))
+    vertical = notch_filter(vertical, 250, 50)
 
     stimulus = array(stimulus, dtype=int8)[1:]
 

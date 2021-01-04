@@ -142,13 +142,15 @@ class Subject(Model):
         return 0
 
     @property
-    def code(self) -> str:
-        initials = ''.join((
+    def initials(self) -> str:
+        return ''.join((
             name[0]
             for name in self._name.upper().split()
         ))
 
-        return initials + self._borndate.strftime('%d%m%Y')
+    @property
+    def code(self) -> str:
+        return self.initials + self._borndate.strftime('%d%m%Y')
 
     @classmethod
     def from_json(cls, json: dict):

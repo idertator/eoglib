@@ -23,9 +23,32 @@ class Position(IntEnum):
     Unknown = 0
     Left = 1
     Right = 2
-    Top = 3
-    Bottom = 4
-    Center = 5
+    Top = 4
+    Bottom = 8
+    Center = 16
+
+    @property
+    def marker(self) -> str:
+        return {
+            Position.Unknown: '',
+            Position.Left: 'l',
+            Position.Right: 'r',
+            Position.Top: 't',
+            Position.Bottom: 'b',
+            Position.Center: 'c',
+        }[self]
+
+
+    @property
+    def stimulus(self) -> str:
+        return {
+            Position.Unknown: 0,
+            Position.Left: -1,
+            Position.Right: 1,
+            Position.Top: 1,
+            Position.Bottom: -1,
+            Position.Center: 0,
+        }[self]
 
 
 class Stimulus(Model):

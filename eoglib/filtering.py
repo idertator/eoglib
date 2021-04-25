@@ -5,9 +5,11 @@ from scipy.signal import iirnotch, lfilter
 _NOTCH = {
     50: {
         250: iirnotch(50, 30, 250),
+        1000: iirnotch(50, 30, 1000),
     },
     60: {
         250: iirnotch(60, 30, 250),
+        1000: iirnotch(60, 30, 1000),
     }
 }
 

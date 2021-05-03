@@ -79,7 +79,6 @@ def load_openeog(filename: str, apply_filter: bool = True) -> list[tuple[ndarray
         timestamps = array(timestamps, dtype=uint32)
         indexes = array(indexes, dtype=uint32)
 
-
         horizontal_samples = array(horizontal_samples, dtype=int32)
         horizontal_samples -= int(mean(horizontal_samples))
 
@@ -101,11 +100,11 @@ def load_openeog(filename: str, apply_filter: bool = True) -> list[tuple[ndarray
         stimulus = array(positions, dtype=int32) * horizontal_scale
 
         result.append((
-            timestamps,
-            indexes,
-            horizontal_samples,
-            vertical_samples,
-            positions
+            timestamps[1:],
+            indexes[1:] - 1,
+            horizontal_samples[1:],
+            vertical_samples[1:],
+            positions[1:]
         ))
 
     return result

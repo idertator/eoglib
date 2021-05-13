@@ -2,17 +2,13 @@ from dataclasses import dataclass
 from math import log10
 from struct import unpack
 
-from numpy import array, int32, max, mean, min, ndarray, uint32
+from numpy import array, int32, mean, ndarray, uint32
+from scipy.signal import medfilt
 
 from eoglib.filtering import notch_filter
 from eoglib.models import StimulusPosition
 
-_DEFAULT_GAIN = 24
-_SAMPLE_VOLTS_SCALE = (4.5 / _DEFAULT_GAIN / (2**23 - 1))
-
-
-def mV(sample: int) -> int:
-    return int(sample * _SAMPLE_VOLTS_SCALE)
+OMIT_TIME = 1000
 
 
 @dataclass
@@ -27,7 +23,7 @@ class Sample:
     @classmethod
     def build(cls, data: bytes):
         header = data[0]
-        timestamp, index, horizontal_channel, vertical_channel =  unpack('>I3s3s3s', data[1:-2])
+        timestamp, index, horizontal_channel, vertical_channel = unpack('>I3s3s3s', data[1:-2])
         position = unpack('>H', data[-2:])[0]
 
         return cls(
@@ -40,7 +36,11 @@ class Sample:
         )
 
 
-def load_openeog(filename: str, apply_filter: bool = True) -> list[tuple[ndarray, ndarray, ndarray, ndarray, ndarray]]:
+def load_openeog(
+    filename: str,
+    apply_filter: bool = True,
+    medfilt_size: int = None,
+) -> list[tuple[ndarray, ndarray, ndarray, ndarray, ndarray]]:
     test_list = []
 
     sample_list = None
@@ -82,29 +82,31 @@ def load_openeog(filename: str, apply_filter: bool = True) -> list[tuple[ndarray
         horizontal_samples = array(horizontal_samples, dtype=int32)
         horizontal_samples -= int(mean(horizontal_samples))
 
-        if apply_filter:
-            horizontal_samples = notch_filter(horizontal_samples, 1000, 50).astype(int32)
-
         vertical_samples = array(vertical_samples, dtype=int32)
         vertical_samples -= int(mean(vertical_samples))
 
         if apply_filter:
+            horizontal_samples = notch_filter(horizontal_samples, 1000, 50).astype(int32)
             vertical_samples = notch_filter(vertical_samples, 1000, 50).astype(int32)
+
+        if medfilt_size is not None:
+            horizontal_samples = medfilt(horizontal_samples, medfilt_size)
+            vertical_samples = medfilt(vertical_samples, medfilt_size)
 
         min_h = abs(horizontal_samples.min())
         max_h = abs(horizontal_samples.max())
 
-        max_horizontal =  max([min_h, max_h])
-        horizontal_scale =  10 ** int(log10(max_horizontal))
+        max_horizontal = max([min_h, max_h])
+        horizontal_scale = 10 ** int(log10(max_horizontal))
 
         stimulus = array(positions, dtype=int32) * horizontal_scale
 
         result.append((
-            timestamps[1:],
-            indexes[1:] - 1,
-            horizontal_samples[1:],
-            vertical_samples[1:],
-            positions[1:]
+            timestamps[OMIT_TIME:],
+            indexes[OMIT_TIME:] - OMIT_TIME,
+            horizontal_samples[OMIT_TIME:],
+            vertical_samples[OMIT_TIME:],
+            stimulus[OMIT_TIME:]
         ))
 
     return result

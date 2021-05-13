@@ -1,5 +1,5 @@
 from enum import Enum, IntEnum
-from math import floor, ceil
+from math import floor
 from random import randint
 from typing import Union
 
@@ -38,7 +38,6 @@ class Position(IntEnum):
             Position.Center: 'c',
         }[self]
 
-
     @property
     def stimulus(self) -> str:
         return {
@@ -66,7 +65,7 @@ class Stimulus(Model):
         return self._calibration
 
     @calibration.setter
-    def calibration(self,  value: bool):
+    def calibration(self, value: bool):
         assert isinstance(value, bool)
         self._calibration = value
 
@@ -78,7 +77,7 @@ class Stimulus(Model):
     def to_json(self) -> dict:
         cls = type(self)
         return {
-            'category': cls.category,
+            'category': cls.category.value,
             'calibration': self._calibration,
         }
 
@@ -200,7 +199,6 @@ class SaccadicStimulus(Stimulus):
             self._channel = hstack(chunks)
         return self._channel
 
-
     @property
     def channel(self) -> ndarray:
         return self._channel
@@ -234,7 +232,7 @@ class SaccadicStimulus(Stimulus):
             'fixation_duration': self._fixation_duration,
             'fixation_variability': self._fixation_variability,
             'saccades_count': self._saccades_count,
-            'orientation': self._orientation,
+            'orientation': self._orientation.value,
         }
         if dump_channels:
             result['channel'] = self._channel

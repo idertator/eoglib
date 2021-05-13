@@ -18,10 +18,10 @@ def _mask_identification(mask: array) -> Iterable[Saccade]:
     Yields:
         Saccade objects
     """
-    first_fixation = where(mask == False)[0][0]
+    first_fixation = where(mask is False)[0][0]
 
     m0 = mask[first_fixation:-1]
-    m1 = mask[first_fixation+1:]
+    m1 = mask[first_fixation + 1:]
 
     onsets = (where((m0 ^ m1) & m1) + first_fixation + 1).ravel()
     offsets = (where((m0 ^ m1) & m0) + first_fixation + 1).ravel()
@@ -34,7 +34,7 @@ def _mask_identification(mask: array) -> Iterable[Saccade]:
 
 
 def _join_by_threshold(
-    events: Iterable['Events'],
+    events: Iterable,
     threshold: int
 ) -> Iterable[Saccade]:
     """Join events if are close enough
@@ -103,7 +103,7 @@ def kmeans_identification(velocities: array, **kwargs) -> Iterable[Saccade]:
 
 def identify_by_velocity(
     velocities: array,
-    method: str='kmeans',
+    method: str = 'kmeans',
     join_threshold: int = None,
     **methodArgs
 ) -> Iterable[Saccade]:
@@ -127,4 +127,3 @@ def identify_by_velocity(
         saccades = _join_by_threshold(saccades, join_threshold)
 
     yield from saccades
-

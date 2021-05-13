@@ -28,7 +28,9 @@ class _Channel:
         self,
         index: int,
         active: bool,
-        gain: int = 24
+        gain: int = 24,
+        srb1: bool = False,
+        srb2: bool = True
     ):
         assert isinstance(index, int)
         self._index = index
@@ -38,6 +40,12 @@ class _Channel:
 
         assert isinstance(gain, int)
         self._gain = gain
+
+        assert isinstance(srb1, bool)
+        self._srb1 = srb1
+
+        assert isinstance(srb2, bool)
+        self._srb2 = srb2
 
     @property
     def index(self) -> int:
@@ -51,6 +59,14 @@ class _Channel:
     def gain(self) -> int:
         return self._gain
 
+    @property
+    def srb1(self) -> bool:
+        return self._srb1
+
+    @property
+    def srb2(self) -> bool:
+        return self._srb2
+
     @classmethod
     def from_json(cls, json: dict):
         return cls(**json)
@@ -60,6 +76,8 @@ class _Channel:
             'index': self._index,
             'active': self._active,
             'gain': self._gain,
+            'srb1': self._srb1,
+            'srb2': self._srb2,
         }
 
 
@@ -97,7 +115,7 @@ class Recorder(Model):
         self,
         board: Union[str, Board] = Board.Unknown,
         sample_rate: Union[int, SampleRate] = SampleRate.Unknown,
-        channels: list[dict] = []
+        channels: list[dict] = list()
     ):
 
         if isinstance(board, str):
@@ -143,7 +161,7 @@ class Recorder(Model):
 
     def to_json(self) -> dict:
         return {
-            'board': self._board,
-            'sample_rate': self._sample_rate,
+            'board': self._board.value,
+            'sample_rate': self._sample_rate.value,
             'channels': self._channels.to_json()
         }

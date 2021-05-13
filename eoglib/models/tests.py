@@ -5,8 +5,8 @@ from numpy import ndarray
 from .annotations import Annotation
 from .base import Model
 from .channels import Channel
-from .stimulus import Stimulus, SaccadicStimulus, Category as StimulusCategory
-
+from .stimulus import Category as StimulusCategory
+from .stimulus import SaccadicStimulus, Stimulus
 
 _CHANNEL_SNAKE_DICT = Channel.snake_names_dict()
 
@@ -91,7 +91,7 @@ class Test(Model):
         stimulus: Stimulus = Stimulus(False),
         channels: dict[Channel, Union[str, ndarray]] = {},
         annotations: list[Annotation] = [],
-        study = None,
+        study=None,
         **parameters
     ):
         assert isinstance(stimulus, Stimulus)
@@ -180,7 +180,7 @@ class Test(Model):
         return self._parameters
 
     @parameters.setter
-    def parameters(val, value: dict):
+    def parameters(self, value: dict):
         assert isinstance(value, dict)
         self._parameters = value
 
@@ -205,7 +205,7 @@ class Test(Model):
         return result
 
     @classmethod
-    def from_json(cls, json: dict, study = None):
+    def from_json(cls, json: dict, study=None):
         stimulus = json.pop('stimulus')
         stimulus_category = StimulusCategory(stimulus['category'])
         if stimulus_category == StimulusCategory.Saccadic:
@@ -233,7 +233,7 @@ class Test(Model):
             **parameters
         )
 
-    def to_json(self, dump_channels: bool=True) -> dict:
+    def to_json(self, dump_channels: bool = True) -> dict:
         result = {
             'stimulus': self._stimulus.to_json(False),
             'annotations': [
@@ -243,5 +243,8 @@ class Test(Model):
             'parameters': self._parameters,
         }
         if dump_channels:
-            result['channels'] = self._channels
+            channels = {}
+            for key, value in self._channels.items():
+                channels[key.value] = value
+            result['channels'] = channels
         return result

@@ -1,6 +1,6 @@
 from datetime import date, datetime
 from enum import Enum
-from typing import Any, Union
+from typing import Union
 
 from .base import Model
 
@@ -9,7 +9,7 @@ class IndexedEnum(Enum):
 
     @classmethod
     def from_index(cls, index: int):
-        for idx, value in enumerate(type(self)):
+        for idx, value in enumerate(cls):
             if index == idx:
                 return value
         return None
@@ -34,7 +34,6 @@ class Gender(IndexedEnum):
             Gender.Male: _('Masculino'),
             Gender.Female: _('Femenino'),
         }[self]
-
 
 
 class Status(IndexedEnum):
@@ -159,7 +158,7 @@ class Subject(Model):
     def to_json(self) -> dict:
         return {
             'name': self._name,
-            'gender': self._gender,
-            'status': self._status,
+            'gender': self._gender.value,
+            'status': self._status.value,
             'borndate': self._borndate,
         }

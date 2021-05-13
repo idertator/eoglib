@@ -146,7 +146,7 @@ class Study(Model):
         return self._parameters
 
     @parameters.setter
-    def parameters(val, value: dict):
+    def parameters(self, value: dict):
         assert isinstance(value, dict)
         self._parameters = value
 

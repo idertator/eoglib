@@ -116,9 +116,8 @@ def smooth_noise_robust_11(data: array, step: float) -> array:
     )(data, step)
 
 
-def differentiate(data: array, step: float, method: Callable=lanczos_11) -> array:
+def differentiate(data: array, step: float, method: Callable = lanczos_11) -> array:
     return method(
         data=data,
         step=step
     )
-

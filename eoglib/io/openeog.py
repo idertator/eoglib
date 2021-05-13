@@ -1,8 +1,9 @@
 from dataclasses import dataclass
-from math import log10
+from math import floor, log10
 from struct import unpack
 
 from numpy import array, int32, mean, ndarray, uint32
+from numpy.polynomial import Polynomial
 from scipy.signal import medfilt
 
 from eoglib.filtering import notch_filter
@@ -39,7 +40,8 @@ class Sample:
 def load_openeog(
     filename: str,
     apply_filter: bool = True,
-    medfilt_size: int = None,
+    fix_drift: bool = True,
+    medfilt_size: int = None
 ) -> list[tuple[ndarray, ndarray, ndarray, ndarray, ndarray]]:
     test_list = []
 
@@ -85,9 +87,18 @@ def load_openeog(
         vertical_samples = array(vertical_samples, dtype=int32)
         vertical_samples -= int(mean(vertical_samples))
 
+        timestamps = timestamps[OMIT_TIME:]
+        indexes = indexes[OMIT_TIME:] - OMIT_TIME
+        horizontal_samples = horizontal_samples[OMIT_TIME:]
+        vertical_samples = vertical_samples[OMIT_TIME:]
+
         if apply_filter:
             horizontal_samples = notch_filter(horizontal_samples, 1000, 50).astype(int32)
             vertical_samples = notch_filter(vertical_samples, 1000, 50).astype(int32)
+
+        if fix_drift:
+            pfit, stats = Polynomial.fit(indexes, horizontal_samples, 2, full=True)
+            horizontal_samples = horizontal_samples - pfit(indexes)
 
         if medfilt_size is not None:
             horizontal_samples = medfilt(horizontal_samples, medfilt_size)
@@ -97,16 +108,17 @@ def load_openeog(
         max_h = abs(horizontal_samples.max())
 
         max_horizontal = max([min_h, max_h])
-        horizontal_scale = 10 ** int(log10(max_horizontal))
+        horizontal_scale = 10 ** floor(log10(max_horizontal))
 
         stimulus = array(positions, dtype=int32) * horizontal_scale
+        stimulus = stimulus[OMIT_TIME:]
 
         result.append((
-            timestamps[OMIT_TIME:],
-            indexes[OMIT_TIME:] - OMIT_TIME,
-            horizontal_samples[OMIT_TIME:],
-            vertical_samples[OMIT_TIME:],
-            stimulus[OMIT_TIME:]
+            timestamps,
+            indexes,
+            horizontal_samples,
+            vertical_samples,
+            stimulus,
         ))
 
     return result

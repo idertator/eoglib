@@ -11,12 +11,15 @@ from .base import Model
 class Category(Enum):
     Unknown = 'unknown'
     Saccadic = 'saccadic'
+    Pursuit = 'pursuit'
+    Antisaccadic = 'antisaccadic'
 
 
 class Orientation(Enum):
     Unknown = 'unknown'
     Horizontal = 'horizontal'
     Vertical = 'vertical'
+    Both = 'both'
 
 
 class Position(IntEnum):
@@ -131,10 +134,15 @@ class SaccadicStimulus(Stimulus):
             if self.calibration:
                 return 'Horizontal Calibration {angle}'.format(angle=angle)
             return 'Horizontal Saccadic {angle}'.format(angle=angle)
-        if self._orientation == Orientation.Vertical:
+        elif self._orientation == Orientation.Vertical:
             if self.calibration:
                 return 'Vertical Calibration {angle}'.format(angle=angle)
             return 'Vertical Saccadic {angle}'.format(angle=angle)
+        elif self._orientation == Orientation.Both:
+            if self.calibration:
+                return 'Saccadic Calibration {angle}'.format(angle=angle)
+            return 'Saccadic {angle}'.format(angle=angle)
+
         return 'Unknown Saccadic Test'
 
     @property

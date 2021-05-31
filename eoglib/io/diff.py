@@ -4,10 +4,8 @@ from os.path import getctime
 from numpy import mean
 from scipy.io import loadmat
 
-from eoglib.models import Study, Test, Channel, SaccadicStimulus
-from eoglib.models import Subject, Status
-from eoglib.models import Recorder, Board
-
+from eoglib.models import (Board, Channel, Recorder, SaccadicStimulus, Status,
+                           Study, Subject, Test)
 
 _STATUS_TRANSLATION = {
     'S': Status.Control,

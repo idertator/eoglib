@@ -30,6 +30,7 @@ setup(
         'Operating System :: POSIX :: Linux',
         'Topic :: Scientific/Engineering :: Bio-Informatics',
         'Topic :: Scientific/Engineering :: Medical Science Apps.',
+        'Programming Language :: Python :: 3.9',
     ],
     url='http://github.com/idertator/eoglib',
     author='Roberto Antonio Becerra García',

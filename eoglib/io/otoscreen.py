@@ -1,11 +1,17 @@
-from eoglib.models import Study, Channel, Test
-from eoglib.models import Stimulus, SaccadicStimulus, StimulusCategory, StimulusOrientation
+from numpy import array, float32
 
-from numpy import float32, array
+from eoglib.models import (Board, Channel, Recorder, SaccadicStimulus,
+                           SampleRate, Stimulus, StimulusCategory,
+                           StimulusOrientation, Study, Test)
 
 
 def load_otoscreen(filename: str) -> Study:
-    study = Study()
+    study = Study(
+        recorder=Recorder(
+            board=Board.OtoScreen,
+            sample_rate=SampleRate.SR200
+        )
+    )
 
     current_angle = 0
     current_channel = 0
@@ -76,7 +82,6 @@ def load_otoscreen(filename: str) -> Study:
                 random=current_random
             )
         )
-
 
     with open(filename, 'r', encoding='latin_1') as ifile:
         while True:

@@ -16,11 +16,11 @@ def requirements() -> list[str]:
 
 setup(
     name='eoglib',
-    version='0.1.0-alpha',
+    version='0.2.0-beta',
     description='Eye movement processing library',
     long_description=readme(),
     classifiers=[
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 4 - Beta',
         'Environment :: X11 Applications',
         'Intended Audience :: Education',
         'Intended Audience :: Healthcare Industry',
@@ -30,6 +30,7 @@ setup(
         'Operating System :: POSIX :: Linux',
         'Topic :: Scientific/Engineering :: Bio-Informatics',
         'Topic :: Scientific/Engineering :: Medical Science Apps.',
+        'Programming Language :: Python :: 3.9',
     ],
     url='http://github.com/idertator/eoglib',
     author='Roberto Antonio Becerra García',

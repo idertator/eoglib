@@ -13,6 +13,7 @@ class Board(Enum):
 
 class SampleRate(IntEnum):
     Unknown = 0
+    SR200 = 200
     SR250 = 250
     SR500 = 500
     SR1000 = 1000
@@ -143,13 +144,19 @@ class Recorder(Model):
 
     @property
     def sample_rate(self) -> SampleRate:
-        return self._sample_rateA
+        return self._sample_rate
 
     @sample_rate.setter
     def sample_rate(self, value: Union[int, SampleRate]):
         if isinstance(value, int):
             value = SampleRate(value)
         self._sample_rate = value
+
+    @property
+    def sampling_interval(self) -> float:
+        if self.sample_rate == SampleRate.Unknown:
+            return 0.0
+        return 1.0 / float(self.sample_rate)
 
     @property
     def channels(self) -> _Channels:

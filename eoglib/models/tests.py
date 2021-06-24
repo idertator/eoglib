@@ -1,6 +1,6 @@
 from typing import Union
 
-from numpy import ndarray
+from numpy import ndarray, array
 
 from .annotations import Annotation
 from .base import Model

@@ -78,7 +78,7 @@ def load_otoscreen(filename: str) -> Study:
                 stimulus=stimulus,
                 channels=current_channels,
                 study=study,
-                length=current_duration,
+                length=current_duration / 1000.0,
                 random=current_random
             )
         )

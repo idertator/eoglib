@@ -3,10 +3,10 @@ from typing import Iterable
 from numpy import abs, where, array
 from sklearn.cluster import KMeans
 
-from eoglib.models import Saccade
+from eoglib.models import Annotation, Event
 
 
-def _mask_identification(mask: array) -> Iterable[Saccade]:
+def _mask_identification(mask: array) -> Iterable[Annotation]:
     """Identify saccadic movement from a masked array
 
     In the array:
@@ -16,9 +16,9 @@ def _mask_identification(mask: array) -> Iterable[Saccade]:
     Args:
         mask: Mask array of boolean values
     Yields:
-        Saccade objects
+        Annotation objects
     """
-    first_fixation = where(mask is False)[0][0]
+    first_fixation = where(mask == False)[0][0]
 
     m0 = mask[first_fixation:-1]
     m1 = mask[first_fixation + 1:]
@@ -27,55 +27,56 @@ def _mask_identification(mask: array) -> Iterable[Saccade]:
     offsets = (where((m0 ^ m1) & m0) + first_fixation + 1).ravel()
 
     for onset, offset in zip(onsets, offsets):
-        yield Saccade(
-            onset=onset,
-            offset=offset
+        yield Annotation(
+            event=Event.Saccade,
+            onset=int(onset),
+            offset=int(offset)
         )
 
 
 def _join_by_threshold(
-    events: Iterable,
+    annotations: Iterable,
     threshold: int
-) -> Iterable[Saccade]:
-    """Join events if are close enough
+) -> Iterable[Annotation]:
+    """Join annotations if are close enough
 
     Args:
-        events: Iterable with candidate events
+        annotations: Iterable with candidate annotations
         threshold: Proximity threshold in samples
     Yields:
         Event objects
     """
     current = None
-    for event in events:
+    for item in annotations:
         if current is None:
-            current = event
-        elif current.category != event.category:
+            current = item
+        elif current.event != item.event:
             yield current
-            current = event
-        elif (event.onset - current.offset) <= threshold:
-            current.offset = event.offset
+            current = item
+        elif (item.onset - current.offset) <= threshold:
+            current.offset = item.offset
         else:
             yield current
-            current = event
+            current = item
 
     if current is not None:
         yield current
 
 
-def threshold_identification(velocities: array, threshold: float = 30.0, **kwargs) -> Iterable[Saccade]:
+def threshold_identification(velocities: array, threshold: float = 30.0, **kwargs) -> Iterable[Annotation]:
     """Traditional velocity threshold saccade identification
 
     Args:
         velocities: Velocities profile of the eye movement
         threshold: Velocity threshold used as minimal value to set the occurrence of a saccade
     Yields:
-        Saccade objects
+        Annotation objects
     """
     mask = abs(velocities) >= threshold
     yield from _mask_identification(mask)
 
 
-def kmeans_identification(velocities: array, **kwargs) -> Iterable[Saccade]:
+def kmeans_identification(velocities: array, **kwargs) -> Iterable[Annotation]:
     """Identify impulses from velocity profiles in eye movement signals
 
     This method identify impulses using the KMeans clustering algorithm.
@@ -87,7 +88,7 @@ def kmeans_identification(velocities: array, **kwargs) -> Iterable[Saccade]:
     Args:
         velocities: Velocities profile of the eye movement
     Yields:
-        Saccade objects
+        Annotation objects
     """
     estimator = KMeans(n_clusters=2)
     abs_velocities = abs(velocities)
@@ -106,7 +107,7 @@ def identify_by_velocity(
     method: str = 'kmeans',
     join_threshold: int = None,
     **methodArgs
-) -> Iterable[Saccade]:
+) -> Iterable[Annotation]:
     """Identify saccadic impulses using the velocity profile
 
     Args:
@@ -114,7 +115,7 @@ def identify_by_velocity(
         method: Method used for perform the identification. Options ['threshold', 'kmeans']
         join_threshold: Samples distance between saccades to be considered as single event
     Yields:
-        Saccade objects
+        Annotation objects
     """
     method_func = {
         'kmeans': kmeans_identification,

@@ -83,31 +83,49 @@ class _ChannelsDictionary(dict):
         else:
             raise IndexError('Index type not supported')
 
+    def __contains__(self, key):
+        if isinstance(key, Channel):
+            return key in self._channels
+        return False
+
+    @property
+    def samples_count(self) -> int:
+        for value in self._channels.values():
+            return len(value)
+        return 0
+
 
 class Test(Model):
 
     def __init__(
         self,
         stimulus: Stimulus = Stimulus(False),
-        channels: dict[Channel, Union[str, ndarray]] = {},
-        annotations: list[Annotation] = [],
+        channels: dict[Channel, Union[str, ndarray]] = None,
+        annotations: list[Annotation] = None,
         study=None,
         **parameters
     ):
         assert isinstance(stimulus, Stimulus)
         self._stimulus = stimulus
 
-        assert isinstance(channels, dict)
-        for key, value in channels.items():
-            assert isinstance(key, Channel)
-            assert isinstance(value, (str, ndarray))
-        self._channels = channels
-        self._channels_dictionary = _ChannelsDictionary(channels)
+        if channels is None:
+            self._channels = {}
+            self._channels_dictionary = _ChannelsDictionary(channels)
+        else:
+            assert isinstance(channels, dict)
+            for key, value in channels.items():
+                assert isinstance(key, Channel)
+                assert isinstance(value, (str, ndarray))
+            self._channels = channels
+            self._channels_dictionary = _ChannelsDictionary(channels)
 
-        assert isinstance(annotations, list)
-        for annotation in annotations:
-            assert isinstance(annotation, Annotation)
-        self._annotations = annotations
+        if annotations is None:
+            self._annotations = []
+        else:
+            assert isinstance(annotations, list)
+            for annotation in annotations:
+                assert isinstance(annotation, Annotation)
+            self._annotations = annotations
 
         self._study = study
         self._parameters = parameters
@@ -141,6 +159,11 @@ class Test(Model):
             self._channels_dictionary[key] = value
         else:
             raise IndexError('Index type not supported')
+
+    def __contains__(self, key):
+        if isinstance(key, Channel):
+            return key in self._channels_dictionary
+        return False
 
     @property
     def stimulus(self) -> Stimulus:
@@ -183,6 +206,26 @@ class Test(Model):
     def parameters(self, value: dict):
         assert isinstance(value, dict)
         self._parameters = value
+
+    @property
+    def sample_rate(self) -> float:
+        if length := self._parameters.get('length', None):
+            return self._channels_dictionary.samples_count / length
+
+        if study := self._study:
+            return self._study.recorder.sample_rate
+
+        return None
+
+    @property
+    def sampling_interval(self) -> float:
+        if length := self._parameters.get('length', None):
+            return 1.0 / (self._channels_dictionary.samples_count / length)
+
+        if study := self._study:
+            return self._study.recorder.sampling_interval
+
+        return None
 
     def append(self, annotation: Annotation):
         assert isinstance(annotation, Annotation)

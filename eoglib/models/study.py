@@ -16,9 +16,9 @@ class Study(Model):
         recorded_at: Union[str, datetime] = datetime.now(),
         recorder: Recorder = Recorder(),
         subject: Subject = Subject(),
-        calibration: dict[Channel, float] = {},
+        calibration: dict[Channel, float] = None,
         protocol_name: str = '',
-        tests: list[Test] = [],
+        tests: list[Test] = None,
         light_intensity: int = 0,
         **parameters
     ):
@@ -36,19 +36,25 @@ class Study(Model):
         assert isinstance(subject, Subject)
         self._subject = subject
 
-        assert isinstance(calibration, dict)
-        for key, value in calibration.items():
-            assert isinstance(key, (str, Channel))
-            assert isinstance(value, float)
-        self._calibration = calibration
+        if calibration is None:
+            self._calibration = {}
+        else:
+            assert isinstance(calibration, dict)
+            for key, value in calibration.items():
+                assert isinstance(key, (str, Channel))
+                assert isinstance(value, float)
+            self._calibration = calibration
 
         assert isinstance(protocol_name, str)
         self._protocol_name = protocol_name
 
-        assert isinstance(tests, list)
-        for test in tests:
-            assert isinstance(test, Test)
-        self._tests = tests
+        if tests is None:
+            self._tests = []
+        else:
+            assert isinstance(tests, list)
+            for test in tests:
+                assert isinstance(test, Test)
+            self._tests = tests
 
         assert isinstance(light_intensity, int)
         self._light_intensity = light_intensity

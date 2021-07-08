@@ -1,12 +1,12 @@
 from collections import defaultdict
 
-from numpy import arange, array, isnan, mean, std
+from numpy import arange, array, isnan, mean
 from scipy.signal import medfilt
 
 from eoglib.differentiation import super_lanczos_11
 from eoglib.errors import CalibrationError
 from eoglib.identification import identify_saccades_by_kmeans
-from eoglib.models import Annotation, Channel, Study, Test
+from eoglib.models import Channel, Study
 from eoglib.stimulation import saccadic_previous_transition_index
 
 

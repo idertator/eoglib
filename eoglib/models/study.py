@@ -20,6 +20,7 @@ class Study(Model):
         protocol_name: str = '',
         tests: list[Test] = None,
         light_intensity: int = 0,
+        ignore_calibration_errors: bool = False,
         **parameters
     ):
         assert isinstance(version, str)
@@ -58,6 +59,9 @@ class Study(Model):
 
         assert isinstance(light_intensity, int)
         self._light_intensity = light_intensity
+
+        assert isinstance(ignore_calibration_errors, bool)
+        self._ignore_calibration_errors = ignore_calibration_errors
 
         self._parameters = parameters
 
@@ -108,6 +112,9 @@ class Study(Model):
 
     @property
     def calibration(self) -> dict[Channel, float]:
+        if not self._calibration:
+            from eoglib.calibration import calibrate
+            self._calibration = calibrate(self, self._ignore_calibration_errors)
         return self._calibration
 
     @calibration.setter
@@ -146,6 +153,15 @@ class Study(Model):
     def light_intensity(self, value: int):
         assert isinstance(value, int)
         self._light_intensity = value
+
+    @property
+    def ignore_calibration_errors(self) -> bool:
+        return self._ignore_calibration_errors
+
+    @ignore_calibration_errors.setter
+    def ignore_calibration_errors(self, value: bool):
+        assert isinstance(value, bool)
+        self._ignore_calibration_errors = value
 
     @property
     def parameters(self) -> dict:

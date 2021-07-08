@@ -1,6 +1,7 @@
 from typing import Union
 
 from numpy import ndarray, array
+from scipy.signal import medfilt
 
 from .annotations import Annotation
 from .base import Model
@@ -129,6 +130,7 @@ class Test(Model):
 
         self._study = study
         self._parameters = parameters
+        self._local_cache = {}
 
     def __str__(self):
         return str(self._stimulus)
@@ -188,6 +190,36 @@ class Test(Model):
         self._channels_dictionary = _ChannelsDictionary(value)
 
     @property
+    def horizontal_channel(self) -> ndarray:
+        if Channel.Horizontal not in self._local_cache:
+            if Channel.Horizontal in self._channels_dictionary:
+                data = self._channels_dictionary[Channel.Horizontal]
+                data = medfilt(data, 11)
+
+                calibration = self._study.calibration.get(Channel.Horizontal, 1.0)
+                data *= calibration
+
+                self._local_cache[Channel.Horizontal] = data
+            else:
+                self._local_cache[Channel.Horizontal] = None
+        return self._local_cache[Channel.Horizontal]
+
+    @property
+    def vertical_channel(self) -> ndarray:
+        if Channel.Vertical not in self._local_cache:
+            if Channel.Vertical in self._channels_dictionary:
+                data = self._channels_dictionary[Channel.Vertical]
+                data = medfilt(data, 11)
+
+                calibration = self._study.calibration.get(Channel.Vertical, 1.0)
+                data *= calibration
+
+                self._local_cache[Channel.Vertical] = data
+            else:
+                self._local_cache[Channel.Vertical] = None
+        return self._local_cache[Channel.Vertical]
+
+    @property
     def annotations(self) -> list[Annotation]:
         return self._annotations
 
@@ -213,7 +245,7 @@ class Test(Model):
             return self._channels_dictionary.samples_count / length
 
         if study := self._study:
-            return self._study.recorder.sample_rate
+            return study.recorder.sample_rate
 
         return None
 
@@ -223,7 +255,7 @@ class Test(Model):
             return 1.0 / (self._channels_dictionary.samples_count / length)
 
         if study := self._study:
-            return self._study.recorder.sampling_interval
+            return study.recorder.sampling_interval
 
         return None
 

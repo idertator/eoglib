@@ -8,6 +8,7 @@ from eoglib.errors import CalibrationError
 from eoglib.identification import identify_saccades_by_kmeans
 from eoglib.models import Channel, Study
 from eoglib.stimulation import saccadic_previous_transition_index
+from eoglib.filtering import butter_filter
 
 
 def calibrate(study: Study, ignore_errors: bool = False) -> dict[Channel, float]:
@@ -17,13 +18,14 @@ def calibrate(study: Study, ignore_errors: bool = False) -> dict[Channel, float]
         if test.stimulus.calibration:
             for channel in (
                 Channel.Horizontal,
-                Channel.Vertical
+                # Channel.Vertical
             ):
                 if channel in test:
+
                     S = None
                     if Channel.Stimulus in test:
                         S = test[Channel.Stimulus]
-                    Y = medfilt(test[channel], 11)
+                    Y = butter_filter(test[channel], test.sample_rate, 30)
                     X = arange(len(Y)) * test.sampling_interval
                     V = super_lanczos_11(Y, test.sampling_interval)
                     saccades = list(identify_saccades_by_kmeans(V))
@@ -31,7 +33,7 @@ def calibrate(study: Study, ignore_errors: bool = False) -> dict[Channel, float]
                     new_saccades = []
                     for saccade in saccades:
                         duration = X[saccade.offset] - X[saccade.onset]
-                        if duration < 0.15:
+                        if duration < 0.05:
                             continue
 
                         if S is not None:

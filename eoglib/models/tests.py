@@ -1,7 +1,8 @@
 from typing import Union
 
 from numpy import ndarray, array
-from scipy.signal import medfilt
+
+from eoglib.filtering import butter_filter
 
 from .annotations import Annotation
 from .base import Model
@@ -194,7 +195,7 @@ class Test(Model):
         if Channel.Horizontal not in self._local_cache:
             if Channel.Horizontal in self._channels_dictionary:
                 data = self._channels_dictionary[Channel.Horizontal]
-                data = medfilt(data, 11)
+                data = butter_filter(data, self.sample_rate, 30)
 
                 calibration = self._study.calibration.get(Channel.Horizontal, 1.0)
                 data *= calibration
@@ -209,7 +210,7 @@ class Test(Model):
         if Channel.Vertical not in self._local_cache:
             if Channel.Vertical in self._channels_dictionary:
                 data = self._channels_dictionary[Channel.Vertical]
-                data = medfilt(data, 11)
+                data = butter_filter(data, self.sample_rate, 30)
 
                 calibration = self._study.calibration.get(Channel.Vertical, 1.0)
                 data *= calibration

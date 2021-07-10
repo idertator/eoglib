@@ -39,7 +39,6 @@ class Sample:
 
 def load_openeog(
     filename: str,
-    apply_filter: bool = True,
     fix_drift: bool = True,
     medfilt_size: int = None
 ) -> list[tuple[ndarray, ndarray, ndarray, ndarray, ndarray]]:
@@ -92,12 +91,9 @@ def load_openeog(
         horizontal_samples = horizontal_samples[OMIT_TIME:]
         vertical_samples = vertical_samples[OMIT_TIME:]
 
-        # if apply_filter:
-        #     horizontal_samples = notch_filter(horizontal_samples, 1000, 50).astype(int32)
-        #     vertical_samples = notch_filter(vertical_samples, 1000, 50).astype(int32)
-
         if fix_drift:
-            pfit, stats = Polynomial.fit(indexes, horizontal_samples, 2, full=True)
+            answer = Polynomial.fit(indexes, horizontal_samples, 2, full=True)
+            pfit = answer[0]
             horizontal_samples = horizontal_samples - pfit(indexes)
 
         if medfilt_size is not None:

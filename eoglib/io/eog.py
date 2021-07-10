@@ -53,7 +53,6 @@ def load_eog(filename: str, data_dir: str = None) -> Study:
         else:
             test_data = load_openeog(
                 filename=join(data_dir, filename),
-                apply_filter=True
             )
 
             for test, (times, idxs, h, v, stim) in zip(study, test_data):

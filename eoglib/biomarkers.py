@@ -37,7 +37,7 @@ def compute_saccadic_biomarkers(
     y: ndarray,
     step: float,
     velocity_threshold: float = 30
-):
+) -> Annotation:
     delta = int((s.offset - s.onset) // 2)
     left, right = s.onset - delta, s.offset + delta
 
@@ -84,3 +84,5 @@ def compute_saccadic_biomarkers(
 
     s['amplitude'] = abs(Yfit[offset] - Yfit[onset])
     s['deviation'] = s['amplitude'] / s['angle']
+
+    return s

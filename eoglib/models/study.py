@@ -6,6 +6,7 @@ from .hardware import Recorder
 from .subjects import Subject
 from .channels import Channel
 from .tests import Test
+from .stimulus import SaccadicStimulus
 
 
 class Study(Model):
@@ -192,7 +193,7 @@ class Study(Model):
         self._tests.remove(result)
         return result
 
-    def identify_saccades_and_compute_biomarkers(self):
+    def identify_saccades_and_compute_biomarkers(self, parallel: bool = False):
         from numpy import arange
 
         from eoglib.biomarkers import compute_saccadic_biomarkers
@@ -202,10 +203,26 @@ class Study(Model):
         from eoglib.identification import identify_saccades_by_kmeans
 
         for test in self._tests:
+            if not isinstance(test.stimulus, SaccadicStimulus):
+                continue
+
+            if test.channels.samples_count == 0:
+                continue
+
+            if test.parameters.get('random', False):
+                continue
+
+            if not Channel.Stimulus in test:
+                continue
+
             S = test[Channel.Stimulus]
             X = arange(len(S)) * test.sampling_interval
             S = (S / abs(max(S)) * test.stimulus.angle)
             Yf = test.horizontal_channel
+
+            if Yf is None:
+                continue
+
             V = super_lanczos_11(Yf, test.sampling_interval)
             VF = abs(butter_filter(V, test.sample_rate, 19))
 
@@ -257,8 +274,16 @@ class Study(Model):
             saccades = result
 
             # Fine computation of saccadic biomarkers
-            for s in saccades:
-                compute_saccadic_biomarkers(s, Yf, test.sampling_interval)
+            if parallel:
+                from joblib import Parallel, delayed
+
+                def compute(s):
+                    return compute_saccadic_biomarkers(s, Yf, test.sampling_interval)
+
+                saccades = Parallel(n_jobs=-1)(delayed(compute)(s) for s in saccades)
+            else:
+                for s in saccades:
+                    compute_saccadic_biomarkers(s, Yf, test.sampling_interval)
 
             test.annotations = saccades
 

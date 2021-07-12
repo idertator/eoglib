@@ -86,6 +86,15 @@ class Annotation:
         assert isinstance(value, int)
         self._offset = value
 
+    @property
+    def parameters(self) -> dict:
+        return self._parameters
+
+    @parameters.setter
+    def parameters(self, value: dict):
+        assert isinstance(value, dict)
+        self._parameters = value
+
     @classmethod
     def from_json(cls, json: dict):
         return cls(**json)

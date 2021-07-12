@@ -14,7 +14,7 @@ def load_otoscreen(filename: str) -> Study:
     )
 
     current_angle = 0
-    current_channel = 0
+    current_channel = None
     current_channels = {}
     current_duration = 0.0
     current_data = []
@@ -22,17 +22,10 @@ def load_otoscreen(filename: str) -> Study:
     current_category_text = None
     current_random = False
 
-    channels = 0
-
     channels_dict = {
         'Horizontal': Channel.Horizontal,
         'Vertical': Channel.Vertical,
         'Vertikal': Channel.Vertical,
-    }
-
-    channels_flags = {
-        Channel.Horizontal: 1,
-        Channel.Vertical: 2,
     }
 
     tests_dict = {
@@ -61,7 +54,7 @@ def load_otoscreen(filename: str) -> Study:
         'Antisacada 2': StimulusOrientation.Both,
     }
 
-    def add_test(current_channels, current_random):
+    def add_test(current_channels, current_data, current_random):
         if current_category == StimulusCategory.Saccadic:
             stimulus = SaccadicStimulus(
                 calibration='Calibration' in current_category_text,
@@ -72,6 +65,9 @@ def load_otoscreen(filename: str) -> Study:
             stimulus = Stimulus(
                 calibration='Calibration' in current_category_text
             )
+
+        if current_data:
+            current_channels[Channel.Stimulus] = array(current_data, dtype=float32)
 
         study.append(
             Test(
@@ -91,61 +87,30 @@ def load_otoscreen(filename: str) -> Study:
                 break
 
             if line.startswith('Sequenz'):
-                if current_data:
-                    if current_channel != 0:
-                        if current_channel == 1:
-                            current_channels[Channel.Horizontal] = array(current_data, dtype=float32)
-                        elif current_channel == 2:
-                            current_channels[Channel.Vertical] = array(current_data, dtype=float32)
-                        elif current_channel == 4:
-                            current_channels[Channel.Stimulus] = array(current_data, dtype=float32) / 10.0
-                        current_data = []
-
-                    samples_count = 0
-                    if Channel.Horizontal in current_channels:
-                        samples_count += len(current_channels[Channel.Horizontal])
-                    if Channel.Vertical in current_channels:
-                        samples_count += len(current_channels[Channel.Vertical])
-                    if Channel.Stimulus in current_channels:
-                        samples_count += len(current_channels[Channel.Stimulus])
-
-                    if samples_count > 0:
-                        add_test(current_channels, current_random)
-                        current_channels = {}
-                        current_random = False
+                if current_data and current_category_text in {
+                    'Calibration hor',
+                    'Saccade Test',
+                }:
+                    add_test(current_channels, current_data, current_random)
+                    current_data = []
+                    current_channels = {}
+                    current_random = False
 
                     current_angle = 0
-                    current_channel = 0
+                    current_channel = None
                     current_duration = 0.0
-
-                    channels = 0
 
                 current_category_text = line.split('\t')[1]
                 current_category = tests_dict[current_category_text]
-                if 'Calibration ver' in current_category_text:
-                    channels = 1
 
             if line.startswith('OKN angle'):
                 current_angle = int(float(line.split('\t')[1]))
 
             if line.startswith('Channel'):
-                if current_channel != 0:
-                    if current_channel == 1:
-                        current_channels[Channel.Horizontal] = array(current_data, dtype=float32)
-                    elif current_channel == 2:
-                        current_channels[Channel.Vertical] = array(current_data, dtype=float32)
-                    elif current_channel == 4:
-                        current_channels[Channel.Stimulus] = array(current_data, dtype=float32) / 10.0
+                if current_channel is not None:
+                    current_channels[current_channel] = array(current_data, dtype=float32)
                     current_data = []
-
-                current_channel_flag = channels_flags[channels_dict[line.split('\t')[1]]]
-
-                if channels & current_channel_flag == 0:
-                    current_channel = current_channel_flag
-                    channels |= current_channel_flag
-                else:
-                    current_channel = 4
-                    channels |= 4
+                current_channel = channels_dict[line.split('\t')[1]]
 
             if line.startswith('Zeit') and current_channel == 4:
                 current_duration += float(line.split('\t')[1])
@@ -158,27 +123,11 @@ def load_otoscreen(filename: str) -> Study:
             if line.startswith('Add.') and 'Random' in line:
                 current_random = True
 
-        if current_data is not None:
-            if current_channel != 0:
-                if current_channel == 1:
-                    current_channels[Channel.Horizontal] = array(current_data, dtype=float32)
-                elif current_channel == 2:
-                    current_channels[Channel.Vertical] = array(current_data, dtype=float32)
-                elif current_channel == 4:
-                    current_channels[Channel.Stimulus] = array(current_data, dtype=float32)
-
-            samples_count = 0
-            if Channel.Horizontal in current_channels:
-                samples_count += len(current_channels[Channel.Horizontal])
-            if Channel.Vertical in current_channels:
-                samples_count += len(current_channels[Channel.Vertical])
-            if Channel.Stimulus in current_channels:
-                samples_count += len(current_channels[Channel.Stimulus])
-
-            if samples_count > 0:
-                add_test(current_channels, current_random)
-                current_channels = {}
-                current_random = False
+        if current_data and current_category_text in {
+            'Calibration hor',
+            'Saccade Test',
+        }:
+            add_test(current_channels, current_data, current_random)
 
         return study
 

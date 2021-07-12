@@ -192,6 +192,76 @@ class Study(Model):
         self._tests.remove(result)
         return result
 
+    def identify_saccades_and_compute_biomarkers(self):
+        from numpy import arange
+
+        from eoglib.biomarkers import compute_saccadic_biomarkers
+        from eoglib.calibration import saccadic_previous_transition_index
+        from eoglib.differentiation import super_lanczos_11
+        from eoglib.filtering import butter_filter
+        from eoglib.identification import identify_saccades_by_kmeans
+
+        for test in self._tests:
+            S = test[Channel.Stimulus]
+            X = arange(len(S)) * test.sampling_interval
+            S = (S / abs(max(S)) * test.stimulus.angle)
+            Yf = test.horizontal_channel
+            V = super_lanczos_11(Yf, test.sampling_interval)
+            VF = abs(butter_filter(V, test.sample_rate, 19))
+
+            angle = test.stimulus.angle
+
+            saccades = list(identify_saccades_by_kmeans(VF))
+
+            # Compute approximated biomarkers
+            for s in saccades:
+                transition = saccadic_previous_transition_index(S, s.onset)
+                latency = X[s.onset] - X[transition]
+                amplitude = abs(Yf[s.onset] - Yf[s.offset])
+                duration = X[s.offset] - X[s.onset]
+
+                s['angle'] = angle
+                s['transition'] = transition
+                s['latency'] = latency
+                s['amplitude'] = amplitude
+                s['duration'] = duration
+
+            # Exclude saccades which not fullfill minimal requirements of amplitude and latency
+            AMPLITUDE_VALID_RANGES = {
+                10: (7, 14),
+                20: (17, 26),
+                30: (26, 37),
+                60: (50, 70),
+            }
+
+            AMPLITUDE_MIN, AMPLITUDE_MAX = AMPLITUDE_VALID_RANGES.get(
+                angle,
+                (angle - angle * 0.1, angle + angle * 0.1)
+            )
+
+            saccades = [
+                s
+                for s in saccades
+                if (AMPLITUDE_MIN <= s['amplitude'] <= AMPLITUDE_MAX) and (s['latency'] <= 0.5)
+            ]
+
+            # Exclude saccades in the same stimulus transition
+            # Prioritizing the one with lesser latency
+            result = []
+            transitions = set()
+            for s in saccades:
+                if s['transition'] not in transitions:
+                    transitions.add(s['transition'])
+                    result.append(s)
+
+            saccades = result
+
+            # Fine computation of saccadic biomarkers
+            for s in saccades:
+                compute_saccadic_biomarkers(s, Yf, test.sampling_interval)
+
+            test.annotations = saccades
+
     @classmethod
     def from_json(cls, json: dict):
         recorder = Recorder.from_json(json.pop('recorder'))

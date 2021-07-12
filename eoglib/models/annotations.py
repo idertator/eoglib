@@ -15,7 +15,8 @@ class Annotation:
         self,
         event: Event = Union[str, Event],
         onset: int = -1,
-        offset: int = -1
+        offset: int = -1,
+        **parameters
     ):
         if isinstance(event, str):
             event = Event(event)
@@ -30,8 +31,31 @@ class Annotation:
 
         assert onset <= offset
 
+        self._parameters = parameters
+
     def __str__(self):
         return f'{self._event.name}({self.onset} → {self.offset})'
+
+    def __getitem__(self, key):
+        if isinstance(key, str):
+            return self._parameters[key]
+
+        raise IndexError('Index type not supported')
+
+    def __setitem__(self, key, value):
+        if isinstance(key, str):
+            self._parameters[key] = value
+        else:
+            raise IndexError('Index type not supported')
+
+    def __contains__(self, key):
+        if isinstance(key, str):
+            return key in self._parameters
+
+        if isinstance(key, int):
+            return self._onset <= key <= self._offset
+
+        return False
 
     @property
     def event(self) -> Event:

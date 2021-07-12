@@ -184,9 +184,9 @@ class Test(Model):
     @channels.setter
     def channels(self, value: dict[Channel, Union[str, ndarray]]):
         assert isinstance(value, dict)
-        for key, value in value.items():
+        for key, val in value.items():
             assert isinstance(key, (str, Channel))
-            assert isinstance(value, ndarray)
+            assert isinstance(val, ndarray)
         self._channels = value
         self._channels_dictionary = _ChannelsDictionary(value)
 

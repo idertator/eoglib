@@ -212,7 +212,7 @@ class Study(Model):
             if test.parameters.get('random', False):
                 continue
 
-            if not Channel.Stimulus in test:
+            if Channel.Stimulus not in test:
                 continue
 
             S = test[Channel.Stimulus]
@@ -284,6 +284,13 @@ class Study(Model):
             else:
                 for s in saccades:
                     compute_saccadic_biomarkers(s, Yf, test.sampling_interval)
+
+            # Post filtering again after fine amplitude and latency tuning
+            saccades = [
+                s
+                for s in saccades
+                if (AMPLITUDE_MIN <= s['amplitude'] <= AMPLITUDE_MAX) and (s['latency'] <= 0.5)
+            ]
 
             test.annotations = saccades
 

@@ -21,7 +21,6 @@ def calibrate(study: Study, ignore_errors: bool = False) -> dict[Channel, float]
                 # Channel.Vertical
             ):
                 if channel in test:
-
                     S = None
                     if Channel.Stimulus in test:
                         S = test[Channel.Stimulus]
@@ -33,7 +32,7 @@ def calibrate(study: Study, ignore_errors: bool = False) -> dict[Channel, float]
                     new_saccades = []
                     for saccade in saccades:
                         duration = X[saccade.offset] - X[saccade.onset]
-                        if duration < 0.05:
+                        if duration < 0.04:
                             continue
 
                         if S is not None:

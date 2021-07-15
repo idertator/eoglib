@@ -3,6 +3,8 @@ from collections import defaultdict
 from numpy import arange, array, isnan, mean
 from scipy.signal import medfilt
 
+from eoglib.biomarkers import compute_saccadic_biomarkers
+from eoglib.consts import AMPLITUDE_VALID_RANGES
 from eoglib.differentiation import super_lanczos_11
 from eoglib.errors import CalibrationError
 from eoglib.identification import identify_saccades_by_kmeans
@@ -14,50 +16,99 @@ from eoglib.filtering import butter_filter
 def calibrate(study: Study, ignore_errors: bool = False) -> dict[Channel, float]:
     calibration = defaultdict(list)
 
+    coeffs = []
     for test in study:
         if test.stimulus.calibration:
-            for channel in (
-                Channel.Horizontal,
-                # Channel.Vertical
-            ):
-                if channel in test:
-                    S = None
-                    if Channel.Stimulus in test:
-                        S = test[Channel.Stimulus]
-                    Y = butter_filter(test[channel], test.sample_rate, 30)
-                    X = arange(len(Y)) * test.sampling_interval
-                    V = super_lanczos_11(Y, test.sampling_interval)
-                    saccades = list(identify_saccades_by_kmeans(V))
+            amplitudes = []
+            channel = Channel.Horizontal
 
-                    new_saccades = []
-                    for saccade in saccades:
-                        duration = X[saccade.offset] - X[saccade.onset]
-                        if duration < 0.04:
+            if channel in test:
+                S = None
+                if Channel.Stimulus in test:
+                    S = test[Channel.Stimulus]
+                Y = butter_filter(test[channel], test.sample_rate, 30)
+                X = arange(len(Y)) * test.sampling_interval
+                V = super_lanczos_11(Y, test.sampling_interval)
+                Vf = butter_filter(V, test.sample_rate, 19)
+                saccades = list(identify_saccades_by_kmeans(Vf))
+
+                angle = test.stimulus.angle
+
+                new_saccades = []
+                for saccade in saccades:
+                    duration = X[saccade.offset] - X[saccade.onset]
+                    if duration < 0.04:
+                        continue
+
+                    if S is not None:
+                        transition_index = saccadic_previous_transition_index(S, saccade.onset)
+                        latency = X[saccade.onset] - X[transition_index]
+                        amplitude = abs(Y[saccade.offset] - Y[saccade.onset])
+
+                        if latency > 1:
                             continue
 
-                        if S is not None:
-                            transition_index = saccadic_previous_transition_index(S, saccade.onset)
-                            latency = X[saccade.onset] - X[transition_index]
+                    saccade['angle'] = angle
+                    saccade['transition'] = transition_index
+                    saccade['latency'] = latency
+                    saccade['duration'] = X[saccade.offset] - X[saccade.onset]
+                    saccade['amplitude'] = amplitude
 
-                            if latency > 1:
-                                continue
+                    new_saccades.append(saccade)
+                    amplitudes.append(amplitude)
 
-                        new_saccades.append(saccade)
+                test.annotations = new_saccades
 
-                    if saccades := new_saccades[1:-1]:
-                        amplitudes = array([
-                            abs(Y[saccade.offset] - Y[saccade.onset])
-                            for saccade in saccades
-                        ])
+            coeffs.append(angle / mean(amplitudes))
 
-                        if amplitudes.any():
-                            angle = test.stimulus.angle
+    coeff = mean(coeffs)
 
-                            coeff = float(angle) / mean(amplitudes)
+    # Refine calibration
+    for test in study:
+        if test.stimulus.calibration:
+            angle = test.stimulus.angle
+            channel = Channel.Horizontal
 
-                            if not isnan(coeff):
-                                calibration[channel].append(coeff)
+            AMPLITUDE_MIN, AMPLITUDE_MAX = AMPLITUDE_VALID_RANGES[angle]
 
+            new_saccades = []
+            transitions = set()
+            for saccade in test:
+                saccade['amplitude'] *= coeff
+
+                if saccade['amplitude'] < AMPLITUDE_MIN or saccade['amplitude'] > AMPLITUDE_MAX:
+                    continue
+
+                if saccade['latency'] > 0.5:
+                    continue
+
+                if saccade['transition'] in transitions:
+                    continue
+
+                transitions.add(saccade['transition'])
+                new_saccades.append(saccade)
+
+            test.annotations = new_saccades
+
+    # Recalculate coefficients
+    for test in study:
+        if test.stimulus.calibration:
+            angle = test.stimulus.angle
+            channel = Channel.Horizontal
+            Y = butter_filter(test[channel], test.sample_rate, 30)
+
+            amplitudes = array([
+                abs(Y[saccade.offset] - Y[saccade.onset])
+                for saccade in test
+            ])
+
+            if amplitudes.any():
+                coeff = float(angle) / mean(amplitudes)
+
+                if not isnan(coeff):
+                    calibration[channel].append(coeff)
+
+    # Calculate final coefficients
     result = {}
 
     for channel in (

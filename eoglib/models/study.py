@@ -1,6 +1,8 @@
 from datetime import datetime
 from typing import Union
 
+from eoglib.consts import AMPLITUDE_VALID_RANGES
+
 from .base import Model
 from .hardware import Recorder
 from .subjects import Subject
@@ -244,13 +246,6 @@ class Study(Model):
                 s['duration'] = duration
 
             # Exclude saccades which not fullfill minimal requirements of amplitude and latency
-            AMPLITUDE_VALID_RANGES = {
-                10: (7, 14),
-                20: (17, 26),
-                30: (26, 37),
-                60: (50, 70),
-            }
-
             AMPLITUDE_MIN, AMPLITUDE_MAX = AMPLITUDE_VALID_RANGES.get(
                 angle,
                 (angle - angle * 0.1, angle + angle * 0.1)

@@ -64,6 +64,8 @@ def compute_saccadic_biomarkers(
     results = minimize(rmse, x0=p0, method='Powell')
     params = results.x
 
+    s['fit_error'] = results.fun
+
     Yfit = v_siggauss2(X, *params)
     Vfit = abs(vd_siggauss2(X, *params[:-1]))
 
